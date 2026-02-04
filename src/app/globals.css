@@ -28,48 +28,55 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* ANCLORA ATLAS LIGHT MODE */
+    --background: 60 20% 97%;
+    --foreground: 227 52% 21%;
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 227 52% 21%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 221.2 83.2% 53.3%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 221.2 83.2% 53.3%;
+    --popover-foreground: 227 52% 21%;
+    --primary: 212 75% 50%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 212 60% 92%;
+    --secondary-foreground: 227 52% 21%;
+    --muted: 212 30% 94%;
+    --muted-foreground: 227 25% 45%;
+    --accent: 227 52% 21%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 212 25% 87%;
+    --input: 212 25% 87%;
+    --ring: 212 75% 50%;
     --radius: 0.5rem;
+
+    /* Brand specific */
+    --gold: 43 74% 49%;
+    --light-blue: 212 88% 83%;
+    --dark-blue: 227 52% 21%;
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 217.2 91.2% 59.8%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 224.3 76.3% 48%;
+    /* ANCLORA ATLAS DARK MODE */
+    --background: 227 55% 10%;
+    --foreground: 60 15% 95%;
+    --card: 227 50% 14%;
+    --card-foreground: 60 15% 95%;
+    --popover: 227 50% 16%;
+    --popover-foreground: 60 15% 95%;
+    --primary: 43 74% 55%;
+    --primary-foreground: 227 55% 10%;
+    --secondary: 227 45% 20%;
+    --secondary-foreground: 60 15% 90%;
+    --muted: 227 40% 18%;
+    --muted-foreground: 212 30% 65%;
+    --accent: 212 75% 65%;
+    --accent-foreground: 227 55% 10%;
+    --destructive: 0 65% 55%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 227 40% 25%;
+    --input: 227 40% 22%;
+    --ring: 43 74% 55%;
   }
 }
 
@@ -79,5 +86,68 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
   }
+}
+
+/* Premium Effects from Atlas */
+.glass {
+  @apply backdrop-blur-md bg-card/80 border border-border/50;
+}
+
+.glass-strong {
+  @apply backdrop-blur-xl bg-card/90 border border-border/30;
+}
+
+.premium-card {
+  @apply relative overflow-hidden rounded-xl border border-border/50 bg-card;
+  @apply transition-all duration-300 ease-out;
+  @apply hover:shadow-xl hover:shadow-accent/5;
+  @apply hover:border-accent/30 hover:-translate-y-1;
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    hsl(var(--muted)) 25%,
+    hsl(var(--muted-foreground)/0.1) 50%,
+    hsl(var(--muted)) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-5px); }
+}
+
+.float {
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.4s ease-out;
+}
+
+.stat-card {
+  @apply relative overflow-hidden rounded-xl border border-border/50 bg-card p-6;
+  @apply transition-all duration-300 ease-out;
+  @apply hover:shadow-lg hover:shadow-accent/5;
+  @apply hover:border-accent/30;
+}
+
+.gradient-text {
+  @apply bg-clip-text text-transparent;
+  background-image: linear-gradient(135deg, hsl(var(--foreground)) 0%, hsl(var(--accent)) 100%);
 }
