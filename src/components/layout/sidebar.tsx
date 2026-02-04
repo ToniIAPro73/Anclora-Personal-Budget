@@ -1,76 +1,129 @@
-"use client";
+'use client'
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { cn } from "@/lib/utils";
-import { 
-  LayoutDashboard, 
-  ReceiptText, 
-  Wallet, 
-  PieChart, 
-  Target, 
-  TrendingUp, 
-  Sparkles, 
-  Settings 
-} from "lucide-react";
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
+import {
+  // LayoutDashboard,
+  // Wallet,
+  // PieChart,
+  // ArrowRight,
+  // Bot,
+  // TrendingUp,
+  // Settings,
+  // ChevronLeft,
+  // ChevronRight,
+} from 'lucide-react'
+import { cn } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
+import { useState } from 'react'
 
 const navigation = [
-  { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { name: "Transacciones", href: "/transactions", icon: ReceiptText },
-  { name: "Cuentas", href: "/accounts", icon: Wallet },
-  { name: "Presupuestos", href: "/budgets", icon: PieChart },
-  { name: "Metas", href: "/goals", icon: Target },
-  { name: "Proyecciones", href: "/projections", icon: TrendingUp },
-  { name: "Asesor IA", href: "/advisor", icon: Sparkles },
-  { name: "Ajustes", href: "/settings", icon: Settings },
-];
+  {
+    name: 'Dashboard',
+    href: '/',
+    // icon: LayoutDashboard,
+    emoji: "📊"
+  },
+  {
+    name: 'Cuentas',
+    href: '/accounts',
+    // icon: Wallet,
+    emoji: "💰"
+  },
+  {
+    name: 'Presupuestos',
+    href: '/budgets',
+    // icon: PieChart,
+    emoji: "💳"
+  },
+  {
+    name: 'Transacciones',
+    href: '/transactions',
+    // icon: ArrowRight,
+    emoji: "💸"
+  },
+  {
+    name: 'Asesor IA',
+    href: '/advisor',
+    // icon: Bot,
+    emoji: "🤖"
+  },
+  {
+    name: 'Proyecciones',
+    href: '/projections',
+    // icon: TrendingUp,
+    emoji: "📈"
+  },
+]
 
 export function Sidebar() {
-  const pathname = usePathname();
+  const pathname = usePathname()
+  const [collapsed, setCollapsed] = useState(false)
 
   return (
-    <div className="flex h-full w-64 flex-col border-r bg-card shadow-sm">
-      <div className="flex h-16 items-center px-6">
-        <h1 className="text-xl font-bold font-outfit text-primary">Anclora Budget</h1>
+    <aside
+      className={cn(
+        'relative flex flex-col border-r border-border/50 bg-card/80 backdrop-blur-sm transition-all duration-300 z-50 h-full',
+        collapsed ? 'w-16' : 'w-64',
+        // Mobile: Hidden by default, customizable via props if needed, but for now standard responsive behavior
+        'hidden md:flex'
+      )}
+    >
+      <div className="flex items-center justify-between p-4 h-16 border-b border-border/50">
+        {!collapsed && (
+            <span className="font-bold text-lg text-primary tracking-tight">Anclora</span>
+        )}
       </div>
-      <nav className="flex-1 space-y-1 px-3 py-4">
+
+      <nav className="flex-1 space-y-1 p-4 overflow-y-auto">
         {navigation.map((item) => {
-          const isActive = pathname === item.href;
+          const isActive = pathname === item.href
+          
           return (
             <Link
               key={item.name}
               href={item.href}
               className={cn(
-                "group flex items-center rounded-md px-3 py-2 text-sm font-medium transition-all hover:bg-accent",
-                isActive 
-                  ? "bg-primary/10 text-primary" 
-                  : "text-muted-foreground hover:text-foreground"
+                'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200 group',
+                isActive
+                  ? 'bg-primary/10 text-primary shadow-sm border border-primary/20'
+                  : 'text-muted-foreground hover:bg-secondary/80 hover:text-foreground'
               )}
+              title={collapsed ? item.name : undefined}
             >
-              <item.icon
-                className={cn(
-                  "mr-3 h-5 w-5 flex-shrink-0 transition-colors",
-                  isActive ? "text-primary" : "text-muted-foreground group-hover:text-foreground"
-                )}
-                aria-hidden="true"
-              />
-              {item.name}
+              <span className="mr-3 text-xl">{item.emoji}</span>
+              {!collapsed && <span>{item.name}</span>}
             </Link>
-          );
+          )
         })}
       </nav>
-      <div className="border-t p-4">
-        {/* User profile / Logout placeholder */}
-        <div className="flex items-center gap-3">
-          <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold">
-            U
-          </div>
-          <div className="overflow-hidden">
-            <p className="text-xs font-medium truncate">Usuario</p>
-            <p className="text-[10px] text-muted-foreground truncate">usuario@ejemplo.com</p>
-          </div>
-        </div>
+
+      <div className="p-4 border-t border-border/50 space-y-2">
+         <Link
+              href="/settings"
+              className={cn(
+                'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200',
+                pathname === '/settings'
+                  ? 'bg-primary/10 text-primary'
+                  : 'text-muted-foreground hover:bg-secondary/80 hover:text-foreground'
+              )}
+               title={collapsed ? 'Configuración' : undefined}
+            >
+              {/* <Settings className="h-5 w-5 flex-shrink-0" /> */}
+              <span className="text-xl mr-2">⚙️</span>
+              {!collapsed && <span>Configuración</span>}
+            </Link>
+
+        <Button
+            variant="ghost"
+            size="sm"
+            className="w-full justify-center mt-2"
+            onClick={() => setCollapsed(!collapsed)}
+        >
+             {collapsed ? <span>▶</span> : <span>◀</span>}
+             {!collapsed && <span className="ml-2 text-xs">Colapsar</span>}
+        </Button>
       </div>
-    </div>
-  );
+    </aside>
+  )
 }

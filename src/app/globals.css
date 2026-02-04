@@ -21,55 +21,172 @@
   --color-card: hsl(var(--card));
   --color-card-foreground: hsl(var(--card-foreground));
 
+  /* Brand Colors */
+  --color-gold: hsl(var(--gold));
+  --color-light-blue: hsl(var(--light-blue));
+  --color-dark-blue: hsl(var(--dark-blue));
+
+  /* Kanban Colors */
+  --color-kanban-backlog: hsl(var(--kanban-backlog));
+  --color-kanban-proposal: hsl(var(--kanban-proposal));
+  --color-kanban-approved: hsl(var(--kanban-approved));
+  --color-kanban-in-progress: hsl(var(--kanban-in-progress));
+  --color-kanban-testing: hsl(var(--kanban-testing));
+  --color-kanban-completed: hsl(var(--kanban-completed));
+  --color-kanban-cancelled: hsl(var(--kanban-cancelled));
+
   --radius-lg: var(--radius);
   --radius-md: calc(var(--radius) - 2px);
   --radius-sm: calc(var(--radius) - 4px);
+
+  --animate-accordion-down: accordion-down 0.2s ease-out;
+  --animate-accordion-up: accordion-up 0.2s ease-out;
+  --animate-slide-in-right: slide-in-right 0.3s ease-out;
+  --animate-fade-in: fade-in 0.3s ease-out;
+  --animate-fade-in-up: fade-in-up 0.4s ease-out;
+  --animate-fade-in-down: fade-in-down 0.4s ease-out;
+  --animate-fade-in-scale: fade-in-scale 0.3s ease-out;
+
+  @keyframes accordion-down {
+    from { height: 0; }
+    to { height: var(--radix-accordion-content-height); }
+  }
+  @keyframes accordion-up {
+    from { height: var(--radix-accordion-content-height); }
+    to { height: 0; }
+  }
+  @keyframes slide-in-right {
+    from { transform: translateX(100%); }
+    to { transform: translateX(0); }
+  }
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes fade-in-up {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fade-in-down {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fade-in-scale {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+  }
 }
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    /* ============================================
+       ANCLORA COGNITIVE SOLUTIONS - LIGHT MODE
+       ============================================ */
+
+    /* Base colors */
+    --background: 60 20% 97%; /* Soft off-white #F7F7F3 */
+    --foreground: 227 52% 21%; /* Dark blue #192350 */
+
+    /* Card/Surface colors */
+    --card: 0 0% 100%; /* Pure white */
+    --card-foreground: 227 52% 21%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 221.2 83.2% 53.3%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 221.2 83.2% 53.3%;
+    --popover-foreground: 227 52% 21%;
+
+    /* Primary - Light Blue */
+    --primary: 212 75% 50%;
+    --primary-foreground: 0 0% 100%;
+
+    /* Secondary */
+    --secondary: 212 60% 92%;
+    --secondary-foreground: 227 52% 21%;
+
+    /* Muted */
+    --muted: 212 30% 94%;
+    --muted-foreground: 227 25% 45%;
+
+    /* Accent - Dark Blue highlights */
+    --accent: 227 52% 21%;
+    --accent-foreground: 0 0% 100%;
+
+    /* Destructive */
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* Border and Input */
+    --border: 212 25% 87%;
+    --input: 212 25% 87%;
+    --ring: 212 75% 50%;
     --radius: 0.5rem;
+
+    /* Brand properties */
+    --gold: 43 74% 49%;
+    --light-blue: 212 88% 83%;
+    --dark-blue: 227 52% 21%;
+
+    /* Kanban Colors */
+    --kanban-backlog: 220 15% 55%;
+    --kanban-proposal: 43 74% 49%;
+    --kanban-approved: 152 60% 40%;
+    --kanban-in-progress: 212 80% 55%;
+    --kanban-testing: 270 60% 55%;
+    --kanban-completed: 152 70% 35%;
+    --kanban-cancelled: 0 65% 55%;
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 217.2 91.2% 59.8%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 224.3 76.3% 48%;
+    /* ============================================
+       ANCLORA COGNITIVE SOLUTIONS - DARK MODE
+       ============================================ */
+
+    /* Base colors - Deep blue background */
+    --background: 227 55% 10%; /* Very dark blue #0D1526 */
+    --foreground: 60 15% 95%; /* Off-white */
+
+    /* Card/Surface colors */
+    --card: 227 50% 14%; /* Elevated surface */
+    --card-foreground: 60 15% 95%;
+    --popover: 227 50% 16%;
+    --popover-foreground: 60 15% 95%;
+
+    /* Primary - Gold in dark mode */
+    --primary: 43 74% 55%;
+    --primary-foreground: 227 55% 10%;
+
+    /* Secondary */
+    --secondary: 227 45% 20%;
+    --secondary-foreground: 60 15% 90%;
+
+    /* Muted */
+    --muted: 227 40% 18%;
+    --muted-foreground: 212 30% 65%;
+
+    /* Accent - Light Blue highlights */
+    --accent: 212 75% 65%;
+    --accent-foreground: 227 55% 10%;
+
+    /* Destructive */
+    --destructive: 0 65% 55%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* Border and Input */
+    --border: 227 40% 25%;
+    --input: 227 40% 22%;
+    --ring: 43 74% 55%;
+
+    /* Brand properties */
+    --gold: 43 74% 55%;
+    --light-blue: 212 75% 65%;
+    --dark-blue: 227 52% 21%;
+
+    /* Kanban Colors Dark */
+    --kanban-backlog: 220 20% 50%;
+    --kanban-proposal: 43 74% 55%;
+    --kanban-approved: 152 55% 45%;
+    --kanban-in-progress: 212 75% 60%;
+    --kanban-testing: 270 55% 60%;
+    --kanban-completed: 152 65% 40%;
+    --kanban-cancelled: 0 60% 55%;
   }
 }
 
@@ -77,7 +194,83 @@
   * {
     @apply border-border;
   }
+  html, body {
+    @apply overflow-x-hidden;
+  }
   body {
     @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
   }
 }
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  @apply bg-muted;
+}
+::-webkit-scrollbar-thumb {
+  @apply bg-muted-foreground/30 rounded-full;
+}
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-muted-foreground/50;
+}
+
+/* ============================================
+   PREMIUM VISUAL EFFECTS
+   ============================================ */
+
+/* Glass morphism */
+.glass {
+  @apply backdrop-blur-md bg-card/80 border border-border/50;
+}
+.glass-strong {
+  @apply backdrop-blur-xl bg-card/90 border border-border/30;
+}
+
+/* Premium card */
+.premium-card {
+  @apply relative overflow-hidden rounded-xl border border-border/50 bg-card;
+  @apply transition-all duration-300 ease-out;
+  @apply hover:shadow-xl hover:shadow-accent/5;
+  @apply hover:border-accent/30 hover:-translate-y-1;
+}
+.premium-card::before {
+  content: '';
+  @apply absolute inset-0 opacity-0 transition-opacity duration-300 pointer-events-none;
+  background: linear-gradient(135deg, hsl(var(--accent)/0.1) 0%, transparent 50%);
+}
+.premium-card:hover::before {
+  @apply opacity-100;
+}
+
+/* Shimmer effect */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    hsl(var(--muted)) 25%,
+    hsl(var(--muted-foreground)/0.1) 50%,
+    hsl(var(--muted)) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* Stagger children animation */
+.stagger-children > * {
+  animation: fade-in-up 0.4s ease-out both;
+}
+.stagger-children > *:nth-child(1) { animation-delay: 0ms; }
+.stagger-children > *:nth-child(2) { animation-delay: 50ms; }
+.stagger-children > *:nth-child(3) { animation-delay: 100ms; }
+.stagger-children > *:nth-child(4) { animation-delay: 150ms; }
+.stagger-children > *:nth-child(5) { animation-delay: 200ms; }
+.stagger-children > *:nth-child(6) { animation-delay: 250ms; }
+.stagger-children > *:nth-child(7) { animation-delay: 300ms; }
+.stagger-children > *:nth-child(8) { animation-delay: 350ms; }
