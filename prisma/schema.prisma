@@ -1,0 +1,533 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider        = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ===== USERS & AUTHENTICATION =====
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  emailVerified DateTime?
+  name          String?
+  image         String?
+  password      String? // Hashed with bcrypt
+  
+  // Financial settings
+  defaultCurrency String  @default("EUR")
+  locale          String  @default("es-ES")
+  timezone        String  @default("Europe/Madrid")
+  
+  // Relations
+  accounts           Account[]
+  categories         Category[]
+  budgets            Budget[]
+  transactions       Transaction[]
+  projections        CashFlowProjection[]
+  aiConversations    AIConversation[]
+  financialDocuments FinancialDocument[]
+  goals              FinancialGoal[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@map("users")
+}
+
+// ===== ACCOUNTS (Bank Accounts, Credit Cards, Cash, etc.) =====
+
+model Account {
+  id       String      @id @default(cuid())
+  userId   String
+  name     String
+  type     AccountType
+  currency String      @default("EUR")
+  
+  // Balance tracking
+  currentBalance Decimal @db.Decimal(15, 2)
+  initialBalance Decimal @db.Decimal(15, 2)
+  
+  // Bank integration (Plaid)
+  plaidAccessToken String? @db.Text
+  plaidAccountId   String?
+  lastSyncedAt     DateTime?
+  syncEnabled      Boolean @default(false)
+  
+  // Metadata
+  color       String  @default("#3B82F6")
+  icon        String  @default("bank")
+  description String? @db.Text
+  isActive    Boolean @default(true)
+  
+  // Relations
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions Transaction[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([userId])
+  @@index([type])
+  @@map("accounts")
+}
+
+enum AccountType {
+  CHECKING     // Cuenta corriente
+  SAVINGS      // Cuenta ahorro
+  CREDIT_CARD  // Tarjeta crédito
+  CASH         // Efectivo
+  INVESTMENT   // Inversión
+  LOAN         // Préstamo
+  OTHER        // Otro
+}
+
+// ===== CATEGORIES (Income & Expense) =====
+
+model Category {
+  id          String       @id @default(cuid())
+  userId      String
+  name        String
+  type        CategoryType
+  parentId    String?
+  
+  // Visual
+  color String @default("#6B7280")
+  icon  String @default("folder")
+  
+  // Budget rules
+  monthlyBudget Decimal? @db.Decimal(10, 2)
+  
+  // AI learning
+  keywords String[] // Keywords for auto-categorization
+  
+  // Relations
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parent       Category?     @relation("CategoryHierarchy", fields: [parentId], references: [id], onDelete: SetNull)
+  subcategories Category[]   @relation("CategoryHierarchy")
+  transactions Transaction[]
+  budgetAllocations BudgetAllocation[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@unique([userId, name, type])
+  @@index([userId])
+  @@index([type])
+  @@map("categories")
+}
+
+enum CategoryType {
+  INCOME   // Ingreso
+  EXPENSE  // Gasto
+}
+
+// ===== TRANSACTIONS =====
+
+model Transaction {
+  id          String          @id @default(cuid())
+  userId      String
+  accountId   String
+  categoryId  String?
+  
+  // Transaction data
+  amount      Decimal         @db.Decimal(15, 2)
+  type        TransactionType
+  description String
+  notes       String?         @db.Text
+  date        DateTime
+  
+  // Metadata
+  merchant    String?
+  location    String?
+  tags        String[]
+  
+  // Reconciliation
+  isReconciled Boolean  @default(false)
+  reconciledAt DateTime?
+  
+  // Recurring
+  isRecurring Boolean @default(false)
+  recurringId String?
+  
+  // AI categorization
+  autoCategorized Boolean @default(false)
+  confidence      Float?  // 0-1 confidence score
+  
+  // Soft delete
+  isDeleted Boolean  @default(false)
+  deletedAt DateTime?
+  
+  // Relations
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  account  Account   @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  category Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  recurring RecurringTransaction? @relation(fields: [recurringId], references: [id])
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([userId])
+  @@index([accountId])
+  @@index([categoryId])
+  @@index([date])
+  @@index([type])
+  @@map("transactions")
+}
+
+enum TransactionType {
+  INCOME    // Ingreso
+  EXPENSE   // Gasto
+  TRANSFER  // Transferencia entre cuentas
+}
+
+// ===== RECURRING TRANSACTIONS =====
+
+model RecurringTransaction {
+  id          String    @id @default(cuid())
+  userId      String
+  
+  // Template data
+  accountId   String
+  categoryId  String?
+  amount      Decimal   @db.Decimal(15, 2)
+  type        TransactionType
+  description String
+  
+  // Recurrence rules
+  frequency   RecurrenceFrequency
+  interval    Int       @default(1) // Every N frequency units
+  startDate   DateTime
+  endDate     DateTime?
+  nextDate    DateTime
+  
+  // Days of month/week
+  dayOfMonth  Int?      // 1-31 for monthly
+  dayOfWeek   Int?      // 0-6 for weekly
+  
+  // Status
+  isActive    Boolean   @default(true)
+  
+  // Generated transactions
+  transactions Transaction[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([userId])
+  @@index([nextDate])
+  @@map("recurring_transactions")
+}
+
+enum RecurrenceFrequency {
+  DAILY
+  WEEKLY
+  BIWEEKLY
+  MONTHLY
+  BIMONTHLY
+  QUARTERLY
+  YEARLY
+}
+
+// ===== BUDGETS =====
+
+model Budget {
+  id          String       @id @default(cuid())
+  userId      String
+  name        String
+  type        BudgetType
+  
+  // Period
+  startDate   DateTime
+  endDate     DateTime
+  
+  // Total budget
+  totalAmount Decimal      @db.Decimal(15, 2)
+  
+  // Settings
+  rollover    Boolean      @default(false) // Carry over unused budget
+  isActive    Boolean      @default(true)
+  
+  // Relations
+  user        User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  allocations BudgetAllocation[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([userId])
+  @@index([startDate, endDate])
+  @@map("budgets")
+}
+
+enum BudgetType {
+  ENVELOPE       // Método sobre
+  ZERO_BASED     // Presupuesto base cero
+  FIFTY_THIRTY_TWENTY // 50/30/20 rule
+  CUSTOM         // Personalizado
+}
+
+// ===== BUDGET ALLOCATIONS =====
+
+model BudgetAllocation {
+  id         String  @id @default(cuid())
+  budgetId   String
+  categoryId String
+  
+  // Allocation
+  amount     Decimal @db.Decimal(10, 2)
+  percentage Float?  // For percentage-based budgets
+  
+  // Tracking
+  spent      Decimal @default(0) @db.Decimal(10, 2)
+  
+  // Relations
+  budget   Budget   @relation(fields: [budgetId], references: [id], onDelete: Cascade)
+  category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@unique([budgetId, categoryId])
+  @@index([budgetId])
+  @@index([categoryId])
+  @@map("budget_allocations")
+}
+
+// ===== CASH FLOW PROJECTIONS =====
+
+model CashFlowProjection {
+  id          String   @id @default(cuid())
+  userId      String
+  
+  // Projection metadata
+  name        String
+  description String?  @db.Text
+  projectionDate DateTime
+  horizon     ProjectionHorizon
+  
+  // Calculated values
+  projectedBalance  Decimal   @db.Decimal(15, 2)
+  projectedIncome   Decimal   @db.Decimal(15, 2)
+  projectedExpenses Decimal   @db.Decimal(15, 2)
+  confidence        Float     // 0-1
+  
+  // Assumptions
+  assumptions Json // Stored assumptions used
+  
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([userId])
+  @@index([projectionDate])
+  @@map("cash_flow_projections")
+}
+
+enum ProjectionHorizon {
+  SHORT_TERM  // 1-3 months
+  MEDIUM_TERM // 3-12 months
+  LONG_TERM   // 12+ months
+}
+
+// ===== FINANCIAL GOALS =====
+
+model FinancialGoal {
+  id          String   @id @default(cuid())
+  userId      String
+  
+  // Goal details
+  name        String
+  description String?  @db.Text
+  type        GoalType
+  targetAmount Decimal  @db.Decimal(15, 2)
+  currentAmount Decimal @default(0) @db.Decimal(15, 2)
+  
+  // Timeline
+  startDate   DateTime
+  targetDate  DateTime
+  
+  // Status
+  isCompleted Boolean  @default(false)
+  completedAt DateTime?
+  
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([userId])
+  @@map("financial_goals")
+}
+
+enum GoalType {
+  SAVINGS        // Ahorro
+  DEBT_PAYOFF    // Pago de deuda
+  EMERGENCY_FUND // Fondo emergencia
+  INVESTMENT     // Inversión
+  PURCHASE       // Compra
+  RETIREMENT     // Jubilación
+  OTHER          // Otro
+}
+
+// ===== AI ADVISOR (RAG SYSTEM) =====
+
+model AIConversation {
+  id       String   @id @default(cuid())
+  userId   String
+  title    String?
+  
+  // Messages
+  messages AIMessage[]
+  
+  // Metadata
+  lastMessageAt DateTime?
+  
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([userId])
+  @@map("ai_conversations")
+}
+
+model AIMessage {
+  id             String   @id @default(cuid())
+  conversationId String
+  role           MessageRole
+  content        String   @db.Text
+  
+  // Context used
+  contextUsed    Json? // Documents/transactions used for RAG
+  
+  // Model info
+  modelId        String?
+  tokensUsed     Int?
+  latencyMs      Int?
+  
+  // Relations
+  conversation AIConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
+  
+  @@index([conversationId])
+  @@map("ai_messages")
+}
+
+enum MessageRole {
+  USER
+  ASSISTANT
+  SYSTEM
+}
+
+// ===== FINANCIAL DOCUMENTS (for RAG Knowledge Base) =====
+
+model FinancialDocument {
+  id          String   @id @default(cuid())
+  userId      String
+  title       String
+  content     String   @db.Text
+  type        DocumentType
+  
+  // Source
+  source      String? // URL or file path
+  
+  // Vector embeddings
+  chunks      DocumentChunk[]
+  
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([userId])
+  @@map("financial_documents")
+}
+
+enum DocumentType {
+  BANK_STATEMENT   // Estado de cuenta
+  RECEIPT          // Recibo
+  INVOICE          // Factura
+  CONTRACT         // Contrato
+  TAX_DOCUMENT     // Documento fiscal
+  INVESTMENT_REPORT // Informe inversión
+  NOTE             // Nota personal
+  OTHER            // Otro
+}
+
+model DocumentChunk {
+  id         String @id @default(cuid())
+  documentId String
+  content    String @db.Text
+  // embedding  Unsupported("vector(1536)")? // pgvector
+  
+  // Chunk metadata
+  chunkIndex Int
+  startChar  Int
+  endChar  Int
+  
+  // Relations
+  document FinancialDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
+  
+  @@index([documentId])
+  @@map("document_chunks")
+}
+
+// ===== ANALYTICS & INSIGHTS =====
+
+model FinancialInsight {
+  id          String      @id @default(cuid())
+  userId      String
+  type        InsightType
+  title       String
+  description String      @db.Text
+  severity    InsightSeverity
+  
+  // Data
+  data        Json // Flexible storage for insight-specific data
+  
+  // Lifecycle
+  isDismissed Boolean  @default(false)
+  dismissedAt DateTime?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([userId])
+  @@index([type])
+  @@map("financial_insights")
+}
+
+enum InsightType {
+  OVERSPENDING       // Sobregasto
+  UNUSUAL_TRANSACTION // Transacción inusual
+  BUDGET_ALERT       // Alerta presupuesto
+  SAVINGS_OPPORTUNITY // Oportunidad ahorro
+  RECURRING_CHARGE   // Cargo recurrente detectado
+  CATEGORY_TREND     // Tendencia categoría
+  GOAL_PROGRESS      // Progreso objetivo
+  CASH_FLOW_WARNING  // Advertencia flujo caja
+}
+
+enum InsightSeverity {
+  INFO
+  WARNING
+  CRITICAL
+}
