@@ -2,56 +2,41 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import {
-  // LayoutDashboard,
-  // Wallet,
-  // PieChart,
-  // ArrowRight,
-  // Bot,
-  // TrendingUp,
-  // Settings,
-  // ChevronLeft,
-  // ChevronRight,
-} from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { useState } from 'react'
+import { ThemeToggle } from "@/components/ui/theme-toggle"
+import { LanguageSelector } from "@/components/ui/language-selector"
 
 const navigation = [
   {
     name: 'Dashboard',
     href: '/',
-    // icon: LayoutDashboard,
     emoji: "📊"
   },
   {
     name: 'Cuentas',
     href: '/accounts',
-    // icon: Wallet,
     emoji: "💰"
   },
   {
     name: 'Presupuestos',
     href: '/budgets',
-    // icon: PieChart,
     emoji: "💳"
   },
   {
     name: 'Transacciones',
     href: '/transactions',
-    // icon: ArrowRight,
     emoji: "💸"
   },
   {
     name: 'Asesor IA',
     href: '/advisor',
-    // icon: Bot,
     emoji: "🤖"
   },
   {
     name: 'Proyecciones',
     href: '/projections',
-    // icon: TrendingUp,
     emoji: "📈"
   },
 ]
@@ -63,15 +48,14 @@ export function Sidebar() {
   return (
     <aside
       className={cn(
-        'relative flex flex-col border-r border-border/50 bg-card/80 backdrop-blur-sm transition-all duration-300 z-50 h-full',
+        'relative flex flex-col border-r border-border/50 bg-card/50 backdrop-blur-md transition-all duration-300 z-50 h-full',
         collapsed ? 'w-16' : 'w-64',
-        // Mobile: Hidden by default, customizable via props if needed, but for now standard responsive behavior
         'hidden md:flex'
       )}
     >
       <div className="flex items-center justify-between p-4 h-16 border-b border-border/50">
         {!collapsed && (
-            <span className="font-bold text-lg text-primary tracking-tight">Anclora</span>
+            <span className="font-bold text-lg text-primary tracking-tight gradient-text">Anclora Budget</span>
         )}
       </div>
 
@@ -84,44 +68,50 @@ export function Sidebar() {
               key={item.name}
               href={item.href}
               className={cn(
-                'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200 group',
+                'flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition-all duration-200 group',
                 isActive
-                  ? 'bg-primary/10 text-primary shadow-sm border border-primary/20'
-                  : 'text-muted-foreground hover:bg-secondary/80 hover:text-foreground'
+                  ? 'bg-primary text-primary-foreground shadow-md glow-primary'
+                  : 'text-muted-foreground hover:bg-secondary/50 hover:text-foreground'
               )}
               title={collapsed ? item.name : undefined}
             >
-              <span className="mr-3 text-xl">{item.emoji}</span>
+              <span className={cn("mr-3 text-xl transition-transform group-hover:scale-110", isActive && "scale-110")}>{item.emoji}</span>
               {!collapsed && <span>{item.name}</span>}
             </Link>
           )
         })}
       </nav>
 
-      <div className="p-4 border-t border-border/50 space-y-2">
-         <Link
-              href="/settings"
-              className={cn(
-                'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200',
-                pathname === '/settings'
-                  ? 'bg-primary/10 text-primary'
-                  : 'text-muted-foreground hover:bg-secondary/80 hover:text-foreground'
-              )}
-               title={collapsed ? 'Configuración' : undefined}
-            >
-              {/* <Settings className="h-5 w-5 flex-shrink-0" /> */}
-              <span className="text-xl mr-2">⚙️</span>
-              {!collapsed && <span>Configuración</span>}
-            </Link>
+      <div className="p-4 border-t border-border/50 space-y-4">
+        {!collapsed && (
+          <div className="flex items-center justify-between gap-2 animate-fade-in">
+            <ThemeToggle />
+            <LanguageSelector />
+          </div>
+        )}
+
+        <Link
+          href="/settings"
+          className={cn(
+            'flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition-all duration-200',
+            pathname === '/settings'
+              ? 'bg-primary/10 text-primary border border-primary/20'
+              : 'text-muted-foreground hover:bg-secondary/50 hover:text-foreground'
+          )}
+          title={collapsed ? 'Configuración' : undefined}
+        >
+          <span className="text-xl mr-2">⚙️</span>
+          {!collapsed && <span>Configuración</span>}
+        </Link>
 
         <Button
-            variant="ghost"
-            size="sm"
-            className="w-full justify-center mt-2"
-            onClick={() => setCollapsed(!collapsed)}
+          variant="ghost"
+          size="sm"
+          className="w-full justify-center mt-2 hover:bg-secondary/50 rounded-xl"
+          onClick={() => setCollapsed(!collapsed)}
         >
-             {collapsed ? <span>▶</span> : <span>◀</span>}
-             {!collapsed && <span className="ml-2 text-xs">Colapsar</span>}
+          {collapsed ? <span>▶</span> : <span>◀</span>}
+          {!collapsed && <span className="ml-2 text-xs">Colapsar</span>}
         </Button>
       </div>
     </aside>
