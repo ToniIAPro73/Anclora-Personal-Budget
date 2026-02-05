@@ -1,9 +1,7 @@
 "use client";
 
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
 import { BudgetFormDialog } from "@/components/features/budgets/budget-form-dialog";
+import { BudgetList } from "@/components/features/budgets/budget-list";
 
 export default function BudgetsPage() {
   return (
@@ -17,20 +15,8 @@ export default function BudgetsPage() {
         <BudgetFormDialog />
       </div>
 
-      {/* Empty State */}
-      <Card className="premium-card">
-        <CardContent className="text-center py-12">
-          <div className="text-6xl mb-4">💳</div>
-          <p className="text-muted-foreground mb-4">No hay presupuestos creados aún.</p>
-          <BudgetFormDialog 
-            trigger={
-              <Button className="bg-primary hover:bg-primary/90 rounded-lg">
-                <Plus className="h-4 w-4 mr-2" /> Crear Primer Presupuesto
-              </Button>
-            } 
-          />
-        </CardContent>
-      </Card>
+      {/* Budget List */}
+      <BudgetList />
     </div>
   );
 }

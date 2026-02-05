@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthenticatedUser } from "@/lib/auth-helper";
+import { SubscriptionService } from "@/server/services/subscription-service";
+
+const subscriptionService = new SubscriptionService();
 
 export async function GET(req: NextRequest) {
   const user = await getAuthenticatedUser();
@@ -7,45 +10,38 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const status = req.nextUrl.searchParams.get("status") || "ACTIVE";
+  try {
+    const subscriptions = await subscriptionService.getSubscriptions(user.id);
+    return NextResponse.json(subscriptions);
+  } catch (error) {
+    console.error("Error fetching subscriptions:", error);
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+  }
+}
 
-  // Mock data for subscriptions
-  const mockSubscriptions = [
-    {
-      id: "sub_1",
-      name: "Netflix",
-      amount: 15.99,
-      currency: "EUR",
-      frequency: "MONTHLY",
-      nextBillingDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-      category: "Entretenimiento",
-      status: "ACTIVE",
-    },
-    {
-      id: "sub_2",
-      name: "Spotify",
-      amount: 11.99,
-      currency: "EUR",
-      frequency: "MONTHLY",
-      nextBillingDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
-      category: "Música",
-      status: "ACTIVE",
-    },
-    {
-      id: "sub_3",
-      name: "Adobe Creative Cloud",
-      amount: 54.99,
-      currency: "EUR",
-      frequency: "MONTHLY",
-      nextBillingDate: new Date(Date.now() + 21 * 24 * 60 * 60 * 1000).toISOString(),
-      category: "Software",
-      status: "ACTIVE",
-    },
-  ];
+export async function POST(req: NextRequest) {
+  const user = await getAuthenticatedUser();
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
 
-  const filtered = status === "ALL" 
-    ? mockSubscriptions 
-    : mockSubscriptions.filter(s => s.status === status);
+  try {
+    const body = await req.json();
+    
+    // Convert string dates to Date objects for the service
+    const data = {
+      ...body,
+      userId: user.id,
+      nextBillingDate: body.nextBillingDate ? new Date(body.nextBillingDate) : undefined,
+    };
 
-  return NextResponse.json(filtered);
+    const subscription = await subscriptionService.createSubscription(data);
+    return NextResponse.json(subscription, { status: 201 });
+  } catch (error: any) {
+    console.error("Error creating subscription:", error);
+    return NextResponse.json(
+      { error: error.message || "Internal Server Error" }, 
+      { status: 400 }
+    );
+  }
 }

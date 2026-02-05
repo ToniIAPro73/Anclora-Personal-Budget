@@ -36,17 +36,45 @@ export function BudgetForm({ onSuccess }: { onSuccess?: () => void }) {
   });
 
   const mutation = useMutation({
-    mutationFn: (data: BudgetValues) => 
-      fetch("/api/budgets", { 
+    mutationFn: async (data: BudgetValues) => {
+      // Find category name for default budget name
+      const category = categories?.find((c: any) => c.id === data.categoryId);
+      
+      const payload = {
+        ...data,
+        name: category ? `Presupuesto ${category.name}` : "Nuevo Presupuesto",
+        totalAmount: data.amount,
+        allocations: [{
+          categoryId: data.categoryId,
+          amount: data.amount,
+        }]
+      };
+
+      const response = await fetch("/api/budgets", { 
         method: "POST", 
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data) 
-      }).then(res => res.json()),
+        body: JSON.stringify(payload) 
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Error al crear el presupuesto");
+      }
+      
+      return response.json();
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["budgets"] });
       toast({ title: "Presupuesto creado", description: "El presupuesto se ha configurado correctamente." });
       onSuccess?.();
     },
+    onError: (error: any) => {
+      toast({ 
+        title: "Error", 
+        description: error.message,
+        variant: "destructive"
+      });
+    }
   });
 
   const onSubmit = (data: BudgetValues) => mutation.mutate(data);
@@ -55,23 +83,23 @@ export function BudgetForm({ onSuccess }: { onSuccess?: () => void }) {
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div className="grid grid-cols-1 gap-4">
         <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <Label htmlFor="categoryId">Categoría</Label>
+          <Label htmlFor="categoryId">Categoría</Label>
+          <div className="flex items-center gap-2">
+            <select 
+              id="categoryId"
+              {...register("categoryId")}
+              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:ring-2 focus:ring-ring transition-all"
+            >
+              <option value="">Selecciona una categoría</option>
+              {categories?.map((cat: any) => (
+                <option key={cat.id} value={cat.id}>{cat.name}</option>
+              ))}
+            </select>
             <CategoryQuickAdd 
               type="EXPENSE" 
               onSuccess={(id) => setValue("categoryId", id)}
             />
           </div>
-          <select 
-            id="categoryId"
-            {...register("categoryId")}
-            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:ring-2 focus:ring-ring transition-all"
-          >
-            <option value="">Selecciona una categoría</option>
-            {categories?.map((cat: any) => (
-              <option key={cat.id} value={cat.id}>{cat.name}</option>
-            ))}
-          </select>
           {errors.categoryId && <p className="text-xs text-destructive">{errors.categoryId.message}</p>}
         </div>
 

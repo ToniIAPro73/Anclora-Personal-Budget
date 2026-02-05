@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus } from "lucide-react";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
+import { Plus, Loader2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -40,6 +40,17 @@ export function SubscriptionFormDialog({ children }: { children?: React.ReactNod
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  // Fetch Accounts and Categories
+  const { data: accounts } = useQuery({
+    queryKey: ["accounts"],
+    queryFn: () => fetch("/api/accounts").then(res => res.json())
+  });
+
+  const { data: categories } = useQuery({
+    queryKey: ["categories"],
+    queryFn: () => fetch("/api/categories").then(res => res.json())
+  });
+
   const {
     register,
     handleSubmit,
@@ -65,7 +76,11 @@ export function SubscriptionFormDialog({ children }: { children?: React.ReactNod
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
-      if (!response.ok) throw new Error("Error al crear la suscripción");
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Error al crear la suscripción");
+      }
       return response.json();
     },
     onSuccess: () => {
@@ -77,10 +92,10 @@ export function SubscriptionFormDialog({ children }: { children?: React.ReactNod
       setOpen(false);
       reset();
     },
-    onError: () => {
+    onError: (error: any) => {
       toast({
         title: "❌ Error",
-        description: "No se pudo guardar la suscripción. Inténtalo de nuevo.",
+        description: error.message,
         variant: "destructive",
       });
     },
@@ -110,9 +125,8 @@ export function SubscriptionFormDialog({ children }: { children?: React.ReactNod
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit(onSubmit as any)} className="flex-1 px-1">
+        <form onSubmit={handleSubmit(onSubmit as any)} className="flex-1 px-1 overflow-y-auto">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-6">
-            {/* Left Column */}
             <div className="space-y-6">
               {/* Name */}
               <div className="space-y-2">
@@ -146,12 +160,16 @@ export function SubscriptionFormDialog({ children }: { children?: React.ReactNod
                 <Label htmlFor="accountId">Cuenta de cargo *</Label>
                 <Select
                   onValueChange={(value: string) => setValue("accountId", value)}
+                  value={watch("accountId")}
                 >
                   <SelectTrigger id="accountId" className="h-11">
                     <SelectValue placeholder="Selecciona una cuenta" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="main">Cuenta Principal</SelectItem>
+                    {accounts?.map((acc: any) => (
+                      <SelectItem key={acc.id} value={acc.id}>{acc.name}</SelectItem>
+                    ))}
+                    {!accounts?.length && <p className="p-2 text-xs text-muted-foreground">No hay cuentas disponibles</p>}
                   </SelectContent>
                 </Select>
                 {errors.accountId && (
@@ -160,14 +178,13 @@ export function SubscriptionFormDialog({ children }: { children?: React.ReactNod
               </div>
             </div>
 
-            {/* Right Column */}
             <div className="space-y-6">
               {/* Frequency */}
               <div className="space-y-2">
                 <Label htmlFor="frequency">Frecuencia de cobro *</Label>
                 <Select
                   onValueChange={(value: string) => setValue("frequency", value as any)}
-                  defaultValue="MONTHLY"
+                  value={watch("frequency")}
                 >
                   <SelectTrigger id="frequency" className="h-11">
                     <SelectValue placeholder="Selecciona frecuencia" />
@@ -205,16 +222,15 @@ export function SubscriptionFormDialog({ children }: { children?: React.ReactNod
                 <Label htmlFor="categoryId">Categoría de gasto *</Label>
                 <Select
                   onValueChange={(value: string) => setValue("categoryId", value)}
-                  defaultValue="subscriptions"
+                  value={watch("categoryId")}
                 >
                   <SelectTrigger id="categoryId" className="h-11">
                     <SelectValue placeholder="Selecciona categoría" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="subscriptions">Suscripciones & Ocio</SelectItem>
-                    <SelectItem value="utilities">Servicios Básicos</SelectItem>
-                    <SelectItem value="software">Software / SaaS</SelectItem>
-                    <SelectItem value="training">Formación / Cursos</SelectItem>
+                    {categories?.filter((c: any) => c.type === "EXPENSE").map((cat: any) => (
+                      <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
                 {errors.categoryId && (
@@ -225,12 +241,13 @@ export function SubscriptionFormDialog({ children }: { children?: React.ReactNod
           </div>
         </form>
 
-        <DialogFooter className="flex-shrink-0">
+        <DialogFooter className="flex-shrink-0 pt-4 border-t">
           <Button
             type="button"
             variant="secondary"
             onClick={() => setOpen(false)}
             disabled={createSubscriptionMutation.isPending}
+            className="rounded-lg font-outfit"
           >
             Cancelar
           </Button>
@@ -238,8 +255,14 @@ export function SubscriptionFormDialog({ children }: { children?: React.ReactNod
             type="submit"
             onClick={handleSubmit(onSubmit as any)}
             disabled={createSubscriptionMutation.isPending}
+            variant="primary"
+            className="rounded-lg font-outfit"
           >
-            {createSubscriptionMutation.isPending ? "Guardando..." : "Guardar Suscripción"}
+            {createSubscriptionMutation.isPending ? (
+              <span className="flex items-center gap-2">
+                <Loader2 className="h-4 w-4 animate-spin" /> Guardando...
+              </span>
+            ) : "Guardar Suscripción"}
           </Button>
         </DialogFooter>
       </DialogContent>

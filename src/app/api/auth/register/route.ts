@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcrypt";
 import prisma from "@/lib/prisma";
+import { CategoryService } from "@/server/services/category-service";
+
+const categoryService = new CategoryService();
 
 export async function POST(req: Request) {
   try {
@@ -33,6 +36,9 @@ export async function POST(req: Request) {
         password: hashedPassword,
       },
     });
+
+    // Seed default categories
+    await categoryService.seedDefaultCategories(user.id);
 
     return NextResponse.json(
       { message: "Usuario registrado con éxito", userId: user.id },

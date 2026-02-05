@@ -140,27 +140,27 @@ export function TransactionForm({ onSuccess }: { onSuccess?: () => void }) {
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <label className="text-sm font-medium flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              Categoría
-              {isCategorizing && <Loader2 className="h-3 w-3 animate-spin" />}
-            </div>
+          <label className="text-sm font-medium flex items-center gap-2">
+            Categoría
+            {isCategorizing && <Loader2 className="h-3 w-3 animate-spin" />}
+          </label>
+          <div className="flex items-center gap-2">
+            <select 
+              {...register("categoryId")}
+              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+            >
+              <option value="">Sin categoría</option>
+              {filteredCategories?.map((cat: any) => (
+                <option key={cat.id} value={cat.id}>{cat.name}</option>
+              ))}
+            </select>
             {transactionType !== "TRANSFER" && (
               <CategoryQuickAdd 
                 type={transactionType as "INCOME" | "EXPENSE"} 
                 onSuccess={(id) => setValue("categoryId", id)}
               />
             )}
-          </label>
-          <select 
-            {...register("categoryId")}
-            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-          >
-            <option value="">Sin categoría</option>
-            {filteredCategories?.map((cat: any) => (
-              <option key={cat.id} value={cat.id}>{cat.name}</option>
-            ))}
-          </select>
+          </div>
         </div>
       </div>
 
