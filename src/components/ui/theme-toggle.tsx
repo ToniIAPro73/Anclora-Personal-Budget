@@ -46,7 +46,13 @@ export function ThemeToggle() {
           {t === 'light' && <span className="filter drop-shadow-sm">☀️</span>}
           {t === 'system' && <span className="filter drop-shadow-sm">💻</span>}
           {t === 'dark' && (
-            <span style={{ filter: 'drop-shadow(0 0 4px rgba(255,255,255,1)) brightness(1.4) contrast(1.3)' }}>
+            <span 
+              style={{ 
+                filter: theme === 'dark' 
+                  ? 'grayscale(100%) brightness(0.2) contrast(2)' 
+                  : 'none'
+              }}
+            >
               🌙
             </span>
           )}

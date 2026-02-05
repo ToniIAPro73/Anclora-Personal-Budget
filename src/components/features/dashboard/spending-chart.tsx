@@ -15,15 +15,15 @@ export function SpendingChart({ data }: { data: any[] }) {
   }));
 
   return (
-    <div className="h-full w-full">
+    <div className="h-full w-full min-h-[200px]">
       <ResponsiveContainer width="100%" height="100%">
         <PieChart>
           <Pie
             data={chartData}
             cx="50%"
-            cy="50%"
-            innerRadius="40%"
-            outerRadius="60%"
+            cy="42%"
+            innerRadius="50%"
+            outerRadius="75%"
             paddingAngle={5}
             dataKey="value"
           >

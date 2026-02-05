@@ -57,7 +57,7 @@ export default function DashboardPage() {
           <CardHeader className="pb-1 pt-3 flex-shrink-0">
             <CardTitle className="text-sm">Tendencia de Gastos</CardTitle>
           </CardHeader>
-          <CardContent className="pl-2 flex-1 min-h-0 flex items-center justify-center overflow-hidden">
+          <CardContent className="pl-2 flex-1 min-h-[180px] flex items-center justify-center overflow-hidden">
             <TrendChart data={data.spendingTrends} />
           </CardContent>
         </Card>
@@ -65,7 +65,7 @@ export default function DashboardPage() {
           <CardHeader className="pb-1 pt-3 flex-shrink-0">
             <CardTitle className="text-sm">Gastos por Categoría</CardTitle>
           </CardHeader>
-          <CardContent className="flex-1 min-h-0 flex items-center justify-center overflow-hidden">
+          <CardContent className="flex-1 min-h-[200px] flex items-center justify-center overflow-hidden">
             <SpendingChart data={data.categoryBreakdown} />
           </CardContent>
         </Card>

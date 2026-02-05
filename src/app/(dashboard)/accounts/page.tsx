@@ -1,9 +1,10 @@
 "use client";
 
 import { AccountList } from "@/components/features/accounts/account-list";
+import { AccountFormDialog } from "@/components/features/accounts/account-form-dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Plus, Wallet } from "lucide-react";
+import { Wallet } from "lucide-react";
 
 export default function AccountsPage() {
   return (
@@ -14,9 +15,7 @@ export default function AccountsPage() {
           <h2 className="text-2xl font-bold font-outfit tracking-tight">Cuentas</h2>
           <p className="text-sm text-muted-foreground">Gestiona tus cuentas bancarias y efectivo.</p>
         </div>
-        <Button className="bg-primary hover:bg-primary/90 rounded-lg">
-          <Plus className="h-4 w-4 mr-2" /> Nueva Cuenta
-        </Button>
+        <AccountFormDialog />
       </div>
 
       {/* Accounts Grid */}

@@ -4,7 +4,7 @@ import { ArrowUpCircle, ArrowDownCircle } from "lucide-react";
 
 export function IncomeExpenseCard({ income, expenses }: { income: number, expenses: number }) {
   return (
-    <Card>
+    <Card className="premium-card group transition-all duration-300 hover:scale-[1.02]">
       <CardHeader className="pb-1 pt-3">
         <CardTitle className="text-xs font-medium text-muted-foreground">Flujo de Efectivo Mensual</CardTitle>
       </CardHeader>

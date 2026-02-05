@@ -54,7 +54,7 @@ export function Sidebar() {
     >
       <div className="flex items-center justify-between p-4 h-16 border-b border-border/50">
         {!collapsed && (
-            <span className="font-bold text-lg text-primary tracking-tight gradient-text">Anclora Budget</span>
+            <span className="font-bold text-lg text-primary tracking-tight gradient-text">Anclora Personal Budget</span>
         )}
       </div>
 

@@ -4,9 +4,9 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { cn } from "@/lib/utils";
+import { SubscriptionFormDialog } from "@/components/features/subscriptions/subscription-form-dialog";
 
 interface Subscription {
   id: string;
@@ -58,9 +58,7 @@ export default function SubscriptionsPage() {
           <h2 className="text-2xl font-bold font-outfit tracking-tight">Suscripciones</h2>
           <p className="text-sm text-muted-foreground">Gestiona tus suscripciones y servicios recurrentes.</p>
         </div>
-        <Button className="bg-primary hover:bg-primary/90 rounded-lg">
-          <Plus className="h-4 w-4 mr-2" /> Nueva Suscripción
-        </Button>
+        <SubscriptionFormDialog />
       </div>
 
       {/* Summary Stats */}

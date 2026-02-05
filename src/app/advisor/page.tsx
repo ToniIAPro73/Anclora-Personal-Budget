@@ -14,7 +14,7 @@ interface Message {
 
 export default function AdvisorPage() {
   const [messages, setMessages] = useState<Message[]>([
-    { role: "assistant", content: "Hola, soy tu asesor financiero de Anclora. ¿En qué puedo ayudarte hoy? Puedo analizar tus gastos, ayudarte con tu presupuesto o proyectar tus ahorros." }
+    { role: "assistant", content: "Hola, soy tu asesor financiero de Anclora Personal Budget. ¿En qué puedo ayudarte hoy? Puedo analizar tus gastos, ayudarte con tu presupuesto o proyectar tus ahorros." }
   ]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);

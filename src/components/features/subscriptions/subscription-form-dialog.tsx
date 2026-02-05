@@ -1,0 +1,248 @@
+"use client";
+
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Plus } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { CurrencyInput } from "@/components/ui/currency-input";
+import { subscriptionSchema, type SubscriptionFormData } from "@/lib/form-schemas";
+import { useToast } from "@/hooks/use-toast";
+
+const FREQUENCIES = [
+  { value: "MONTHLY", label: "Mensual" },
+  { value: "QUARTERLY", label: "Trimestral" },
+  { value: "BIANNUAL", label: "Semestral" },
+  { value: "YEARLY", label: "Anual" },
+] as const;
+
+export function SubscriptionFormDialog({ children }: { children?: React.ReactNode }) {
+  const [open, setOpen] = useState(false);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    setValue,
+    watch,
+    reset,
+  } = useForm<SubscriptionFormData>({
+    resolver: zodResolver(subscriptionSchema) as any,
+    defaultValues: {
+      name: "",
+      amount: 0,
+      frequency: "MONTHLY",
+      status: "ACTIVE",
+      nextBillingDate: new Date(),
+    },
+  });
+
+  const createSubscriptionMutation = useMutation({
+    mutationFn: async (data: SubscriptionFormData) => {
+      const response = await fetch("/api/subscriptions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!response.ok) throw new Error("Error al crear la suscripción");
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["subscriptions"] });
+      toast({
+        title: "✅ Suscripción creada",
+        description: "La suscripción se ha guardado correctamente.",
+      });
+      setOpen(false);
+      reset();
+    },
+    onError: () => {
+      toast({
+        title: "❌ Error",
+        description: "No se pudo guardar la suscripción. Inténtalo de nuevo.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const onSubmit = (data: SubscriptionFormData) => {
+    createSubscriptionMutation.mutate(data);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        {children || (
+          <Button className="bg-primary hover:bg-primary/90 rounded-lg">
+            <Plus className="h-4 w-4 mr-2" /> Nueva Suscripción
+          </Button>
+        )}
+      </DialogTrigger>
+      <DialogContent className="max-w-3xl max-h-[90vh] flex flex-col">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <span className="h-5 w-5 flex items-center justify-center text-primary">🔄</span>
+            Nueva Suscripción
+          </DialogTitle>
+          <DialogDescription>
+            Añade un servicio recurrente para seguir mejor tus gastos de forma eficiente.
+          </DialogDescription>
+        </DialogHeader>
+
+        <form onSubmit={handleSubmit(onSubmit as any)} className="flex-1 px-1">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-6">
+            {/* Left Column */}
+            <div className="space-y-6">
+              {/* Name */}
+              <div className="space-y-2">
+                <Label htmlFor="name">Nombre del servicio *</Label>
+                <Input
+                  id="name"
+                  placeholder="Ej: Netflix, Spotify, Internet..."
+                  {...register("name")}
+                  className="h-11"
+                />
+                {errors.name && (
+                  <p className="text-xs text-destructive font-medium">{errors.name.message}</p>
+                )}
+              </div>
+
+              {/* Amount */}
+              <div className="space-y-2">
+                <Label htmlFor="amount">Costo del servicio *</Label>
+                <CurrencyInput
+                  id="amount"
+                  value={watch("amount")}
+                  onChange={(value: number) => setValue("amount", value)}
+                />
+                {errors.amount && (
+                  <p className="text-xs text-destructive font-medium">{errors.amount.message}</p>
+                )}
+              </div>
+
+               {/* Account */}
+               <div className="space-y-2">
+                <Label htmlFor="accountId">Cuenta de cargo *</Label>
+                <Select
+                  onValueChange={(value: string) => setValue("accountId", value)}
+                >
+                  <SelectTrigger id="accountId" className="h-11">
+                    <SelectValue placeholder="Selecciona una cuenta" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="main">Cuenta Principal</SelectItem>
+                  </SelectContent>
+                </Select>
+                {errors.accountId && (
+                  <p className="text-xs text-destructive font-medium">{errors.accountId.message}</p>
+                )}
+              </div>
+            </div>
+
+            {/* Right Column */}
+            <div className="space-y-6">
+              {/* Frequency */}
+              <div className="space-y-2">
+                <Label htmlFor="frequency">Frecuencia de cobro *</Label>
+                <Select
+                  onValueChange={(value: string) => setValue("frequency", value as any)}
+                  defaultValue="MONTHLY"
+                >
+                  <SelectTrigger id="frequency" className="h-11">
+                    <SelectValue placeholder="Selecciona frecuencia" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {FREQUENCIES.map((freq) => (
+                      <SelectItem key={freq.value} value={freq.value}>
+                        {freq.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {errors.frequency && (
+                  <p className="text-xs text-destructive font-medium">{errors.frequency.message}</p>
+                )}
+              </div>
+
+              {/* Next Billing Date */}
+              <div className="space-y-2">
+                <Label htmlFor="nextBillingDate">Próxima fecha de cobro *</Label>
+                <Input
+                  id="nextBillingDate"
+                  type="date"
+                  onChange={(e) => setValue("nextBillingDate", new Date(e.target.value))}
+                  defaultValue={new Date().toISOString().split('T')[0]}
+                  className="h-11"
+                />
+                {errors.nextBillingDate && (
+                  <p className="text-xs text-destructive font-medium">{errors.nextBillingDate.message}</p>
+                )}
+              </div>
+
+              {/* Category */}
+              <div className="space-y-2">
+                <Label htmlFor="categoryId">Categoría de gasto *</Label>
+                <Select
+                  onValueChange={(value: string) => setValue("categoryId", value)}
+                  defaultValue="subscriptions"
+                >
+                  <SelectTrigger id="categoryId" className="h-11">
+                    <SelectValue placeholder="Selecciona categoría" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="subscriptions">Suscripciones & Ocio</SelectItem>
+                    <SelectItem value="utilities">Servicios Básicos</SelectItem>
+                    <SelectItem value="software">Software / SaaS</SelectItem>
+                    <SelectItem value="training">Formación / Cursos</SelectItem>
+                  </SelectContent>
+                </Select>
+                {errors.categoryId && (
+                  <p className="text-xs text-destructive font-medium">{errors.categoryId.message}</p>
+                )}
+              </div>
+            </div>
+          </div>
+        </form>
+
+        <DialogFooter className="flex-shrink-0">
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => setOpen(false)}
+            disabled={createSubscriptionMutation.isPending}
+          >
+            Cancelar
+          </Button>
+          <Button
+            type="submit"
+            onClick={handleSubmit(onSubmit as any)}
+            disabled={createSubscriptionMutation.isPending}
+          >
+            {createSubscriptionMutation.isPending ? "Guardando..." : "Guardar Suscripción"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
