@@ -11,20 +11,20 @@ export function BalanceCard({ balance }: { balance: number }) {
     )}>
       <div className="absolute top-0 right-0 -mt-4 -mr-4 h-24 w-24 rounded-full bg-white/10 blur-2xl group-hover:bg-white/20 transition-colors" />
       
-      <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0 relative z-10">
-        <CardTitle className="text-sm font-medium">Balance Total</CardTitle>
-        <div className="p-2 rounded-lg bg-white/10 backdrop-blur-sm">
-          <Wallet className="h-4 w-4 text-primary-foreground" />
+      <CardHeader className="flex flex-row items-center justify-between pb-1 pt-3 space-y-0 relative z-10">
+        <CardTitle className="text-xs font-medium">Balance Total</CardTitle>
+        <div className="p-1.5 rounded-lg bg-white/10 backdrop-blur-sm">
+          <Wallet className="h-3 w-3 text-primary-foreground" />
         </div>
       </CardHeader>
       
-      <CardContent className="relative z-10">
-        <div className="text-3xl font-bold font-outfit tracking-tight">
-          {formatCurrency(balance)}
+      <CardContent className="relative z-10 pb-3">
+        <div className="text-xl lg:text-2xl font-bold font-outfit tracking-tight leading-none">
+          {formatCurrency(balance ?? 0)}
         </div>
-        <p className="text-xs text-primary-foreground/80 mt-1 flex items-center gap-1">
+        <p className="text-[10px] text-primary-foreground/80 mt-1 flex items-center gap-1 leading-tight">
           <span className="h-1 w-1 rounded-full bg-white/50 animate-pulse" />
-          Saldo acumulado en todas las cuentas
+          Saldo acumulado
         </p>
       </CardContent>
     </Card>

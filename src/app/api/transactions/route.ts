@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { getAuthenticatedUser } from "@/lib/auth-helper";
 import { TransactionService } from "@/server/services/transaction-service";
 import prisma from "@/lib/prisma";
 
 const transactionService = new TransactionService();
 
 export async function GET(req: NextRequest) {
-  const session = await auth();
-  if (!session?.user?.id) {
+  const user = await getAuthenticatedUser();
+  if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -18,14 +18,14 @@ export async function GET(req: NextRequest) {
 
   const [transactions, total] = await Promise.all([
     prisma.transaction.findMany({
-      where: { userId: session.user.id, isDeleted: false },
+      where: { userId: user.id, isDeleted: false },
       include: { account: true, category: true },
       orderBy: { date: "desc" },
       skip,
       take: limit,
     }),
     prisma.transaction.count({
-      where: { userId: session.user.id, isDeleted: false },
+      where: { userId: user.id, isDeleted: false },
     }),
   ]);
 
@@ -41,8 +41,8 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const session = await auth();
-  if (!session?.user?.id) {
+  const user = await getAuthenticatedUser();
+  if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const transaction = await transactionService.createTransaction({
       ...body,
-      userId: session.user.id,
+      userId: user.id,
       date: new Date(body.date),
     });
 

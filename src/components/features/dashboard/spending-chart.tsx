@@ -15,15 +15,15 @@ export function SpendingChart({ data }: { data: any[] }) {
   }));
 
   return (
-    <div className="h-[300px] w-full">
+    <div className="h-full w-full">
       <ResponsiveContainer width="100%" height="100%">
         <PieChart>
           <Pie
             data={chartData}
             cx="50%"
             cy="50%"
-            innerRadius={60}
-            outerRadius={80}
+            innerRadius="40%"
+            outerRadius="60%"
             paddingAngle={5}
             dataKey="value"
           >
@@ -35,7 +35,12 @@ export function SpendingChart({ data }: { data: any[] }) {
             formatter={(value: any) => formatCurrency(Number(value))}
             contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
           />
-          <Legend layout="vertical" align="right" verticalAlign="middle" />
+          <Legend 
+            layout="vertical" 
+            align="right" 
+            verticalAlign="middle"
+            wrapperStyle={{ fontSize: '12px' }}
+          />
         </PieChart>
       </ResponsiveContainer>
     </div>

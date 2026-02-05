@@ -32,20 +32,24 @@ export function ThemeToggle() {
           key={t}
           onClick={() => setTheme(t)}
           className={cn(
-            'relative flex h-7 w-7 items-center justify-center rounded-full',
+            'relative flex h-7 w-7 items-center justify-center rounded-full text-lg',
             'transition-all duration-300',
             'focus:outline-none focus:ring-2 focus:ring-primary/50',
             theme === t
-              ? 'bg-primary text-primary-foreground'
-              : 'hover:bg-secondary text-muted-foreground hover:text-foreground'
+              ? 'bg-primary text-primary-foreground shadow-md scale-110'
+              : 'hover:bg-secondary/80 text-muted-foreground hover:text-foreground hover:scale-105'
           )}
           role="radio"
           aria-checked={theme === t}
           aria-label={themeLabels[t]}
         >
-          {t === 'light' && <span>☀️</span>}
-          {t === 'system' && <span>💻</span>}
-          {t === 'dark' && <span>🌙</span>}
+          {t === 'light' && <span className="filter drop-shadow-sm">☀️</span>}
+          {t === 'system' && <span className="filter drop-shadow-sm">💻</span>}
+          {t === 'dark' && (
+            <span style={{ filter: 'drop-shadow(0 0 4px rgba(255,255,255,1)) brightness(1.4) contrast(1.3)' }}>
+              🌙
+            </span>
+          )}
         </button>
       ))}
     </div>

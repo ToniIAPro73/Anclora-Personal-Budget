@@ -6,7 +6,6 @@ import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { useState } from 'react'
 import { ThemeToggle } from "@/components/ui/theme-toggle"
-import { LanguageSelector } from "@/components/ui/language-selector"
 
 const navigation = [
   {
@@ -69,13 +68,19 @@ export function Sidebar() {
               href={item.href}
               className={cn(
                 'flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition-all duration-200 group',
+                collapsed ? 'justify-center' : '',
                 isActive
                   ? 'bg-primary text-primary-foreground shadow-md glow-primary'
                   : 'text-muted-foreground hover:bg-secondary/50 hover:text-foreground'
               )}
               title={collapsed ? item.name : undefined}
             >
-              <span className={cn("mr-3 text-xl transition-transform group-hover:scale-110", isActive && "scale-110")}>{item.emoji}</span>
+              <span className={cn(
+                "text-xl transition-transform group-hover:scale-110",
+                isActive && "scale-110"
+              )}>
+                {item.emoji}
+              </span>
               {!collapsed && <span>{item.name}</span>}
             </Link>
           )
@@ -84,9 +89,8 @@ export function Sidebar() {
 
       <div className="p-4 border-t border-border/50 space-y-4">
         {!collapsed && (
-          <div className="flex items-center justify-between gap-2 animate-fade-in">
+          <div className="flex items-center justify-center animate-fade-in">
             <ThemeToggle />
-            <LanguageSelector />
           </div>
         )}
 
@@ -103,17 +107,27 @@ export function Sidebar() {
           <span className="text-xl mr-2">⚙️</span>
           {!collapsed && <span>Configuración</span>}
         </Link>
-
-        <Button
-          variant="ghost"
-          size="sm"
-          className="w-full justify-center mt-2 hover:bg-secondary/50 rounded-xl"
-          onClick={() => setCollapsed(!collapsed)}
-        >
-          {collapsed ? <span>▶</span> : <span>◀</span>}
-          {!collapsed && <span className="ml-2 text-xs">Colapsar</span>}
-        </Button>
       </div>
+
+      {/* Floating toggle button - ALWAYS visible */}
+      <button
+        onClick={() => setCollapsed(!collapsed)}
+        className={cn(
+          "absolute -right-3 top-20 z-50",
+          "h-6 w-6 rounded-full",
+          "bg-primary text-primary-foreground",
+          "shadow-lg hover:shadow-xl",
+          "hover:scale-110 active:scale-95",
+          "transition-all duration-200",
+          "flex items-center justify-center",
+          "border-2 border-background"
+        )}
+        aria-label={collapsed ? "Expandir sidebar" : "Colapsar sidebar"}
+      >
+        <span className="text-xs font-bold">
+          {collapsed ? '›' : '‹'}
+        </span>
+      </button>
     </aside>
   )
 }

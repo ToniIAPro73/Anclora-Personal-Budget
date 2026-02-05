@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
+import { LanguageSelector } from '@/components/ui/language-selector'
 import { Button } from '@/components/ui/button'
 // import { Bell, Search, Menu } from 'lucide-react'
 import {
@@ -52,6 +53,8 @@ export function Navbar() {
           </Button>
 
           <ThemeToggle />
+          
+          <LanguageSelector />
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

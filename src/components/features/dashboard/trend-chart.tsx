@@ -7,7 +7,7 @@ export function TrendChart({ data }: { data: any[] }) {
   if (!data?.length) return <div className="h-[300px] flex items-center justify-center text-muted-foreground italic text-sm">Sin datos históricos suficientes</div>;
 
   return (
-    <div className="h-[300px] w-full">
+    <div className="h-full w-full">
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart data={data}>
           <defs>
