@@ -1,6 +1,6 @@
 'use client'
 
-import { Sun, Moon, Monitor } from 'lucide-react'
+// import { Sun, Moon, Monitor } from 'lucide-react'
 import { useTheme } from '@/components/providers/theme-provider'
 import { cn } from '@/lib/utils'
 
@@ -43,9 +43,9 @@ export function ThemeToggle() {
           aria-checked={theme === t}
           aria-label={themeLabels[t]}
         >
-          {t === 'light' && <Sun className="h-4 w-4" />}
-          {t === 'system' && <Monitor className="h-4 w-4" />}
-          {t === 'dark' && <Moon className="h-4 w-4" />}
+          {t === 'light' && <span>☀️</span>}
+          {t === 'system' && <span>💻</span>}
+          {t === 'dark' && <span>🌙</span>}
         </button>
       ))}
     </div>
