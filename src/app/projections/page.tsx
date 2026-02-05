@@ -3,7 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TrendChart } from "@/components/features/dashboard/trend-chart";
-import { TrendingUp, AlertCircle, TrendingDown } from "lucide-react";
+import { TrendingUp, AlertCircle } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 
 export default function ProjectionsPage() {
@@ -69,7 +69,7 @@ export default function ProjectionsPage() {
               {balanceChange >= 0 ? (
                 <TrendingUp className="h-4 w-4 text-emerald-500" />
               ) : (
-                <TrendingDown className="h-4 w-4 text-red-500" />
+                <span className="text-red-500 text-lg">📉</span>
               )}
             </div>
           </CardHeader>

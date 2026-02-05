@@ -26,14 +26,14 @@ export default function AccountsPage() {
       <Card className="premium-card">
         <CardContent className="pt-6">
           <div className="grid gap-3 md:grid-cols-2">
-            <Button variant="outline" className="rounded-lg justify-start h-auto py-3">
+            <Button variant="secondary" className="rounded-lg justify-start h-auto py-3">
               <Wallet className="h-4 w-4 mr-3" />
               <div className="text-left">
                 <div className="font-medium text-sm">Transferencia Entre Cuentas</div>
                 <div className="text-xs text-muted-foreground">Mueve dinero entre tus cuentas</div>
               </div>
             </Button>
-            <Button variant="outline" className="rounded-lg justify-start h-auto py-3">
+            <Button variant="secondary" className="rounded-lg justify-start h-auto py-3">
               <Wallet className="h-4 w-4 mr-3" />
               <div className="text-left">
                 <div className="font-medium text-sm">Reconciliar Cuenta</div>

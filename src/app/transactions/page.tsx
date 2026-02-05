@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, Filter, Download, TrendingUp, TrendingDown } from "lucide-react";
+import { Plus, Filter, TrendingUp } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 
@@ -74,7 +74,7 @@ export default function TransactionsPage() {
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
               <CardTitle className="text-xs font-medium">Gastos</CardTitle>
-              <TrendingDown className="h-4 w-4 text-red-500" />
+              <span className="text-red-500 text-lg">📉</span>
             </div>
           </CardHeader>
           <CardContent>
@@ -108,7 +108,7 @@ export default function TransactionsPage() {
           {(["ALL", "INCOME", "EXPENSE"] as const).map((type) => (
             <Button
               key={type}
-              variant={filter === type ? "default" : "outline"}
+              variant={filter === type ? "primary" : "secondary"}
               size="sm"
               onClick={() => setFilter(type)}
               className="rounded-lg"
@@ -117,8 +117,8 @@ export default function TransactionsPage() {
             </Button>
           ))}
         </div>
-        <Button variant="outline" size="sm" className="ml-auto rounded-lg">
-          <Download className="h-4 w-4 mr-2" /> Exportar
+        <Button variant="secondary" size="sm" className="ml-auto rounded-lg">
+          <span className="mr-2">⬇️</span> Exportar
         </Button>
       </div>
 
