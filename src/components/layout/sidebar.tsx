@@ -30,9 +30,9 @@ const navigation = [
     emoji: "💸"
   },
   {
-    name: 'Asesor IA',
-    href: '/advisor',
-    emoji: "🤖"
+    name: 'Suscripciones',
+    href: '/subscriptions',
+    emoji: "🔄"
   },
   {
     name: 'Proyecciones',

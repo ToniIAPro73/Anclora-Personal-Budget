@@ -22,26 +22,25 @@ export default function DashboardPage() {
   if (isLoading) return <DashboardSkeleton />;
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
-      <div>
-        <h2 className="text-3xl font-bold font-outfit tracking-tight">Dashboard</h2>
-        <p className="text-muted-foreground">Bienvenido de nuevo a tu gestor financiero.</p>
+    <div className="space-y-4 animate-in fade-in duration-500 h-full flex flex-col">
+      <div className="flex-shrink-0">
+        <h2 className="text-2xl font-bold font-outfit tracking-tight">Dashboard</h2>
+        <p className="text-sm text-muted-foreground">Bienvenido de nuevo a tu gestor financiero.</p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4 flex-shrink-0">
         <BalanceCard balance={data.totalBalance} />
         <RevenueCard />
         <IncomeExpenseCard 
           income={data.monthlyIncome} 
           expenses={data.monthlyExpenses} 
         />
-        {/* Placeholder for Goals or Next Payment */}
-        <Card>
+        <Card className="premium-card">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Tasa de Ahorro</CardTitle>
+            <CardTitle className="text-xs font-medium">Tasa de Ahorro</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold font-outfit">
+            <div className="text-2xl font-bold font-outfit">
               {data.monthlyIncome > 0 
                 ? (((data.monthlyIncome - data.monthlyExpenses) / data.monthlyIncome) * 100).toFixed(1) 
                 : "0"}%
@@ -50,31 +49,31 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-        <Card className="col-span-4">
-          <CardHeader>
-            <CardTitle>Tendencia de Gastos</CardTitle>
+      <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-7 flex-1 min-h-0 overflow-y-auto">
+        <Card className="col-span-4 premium-card flex flex-col">
+          <CardHeader className="pb-2 flex-shrink-0">
+            <CardTitle className="text-sm">Tendencia de Gastos</CardTitle>
           </CardHeader>
-          <CardContent className="pl-2">
+          <CardContent className="pl-2 flex-1 min-h-0 overflow-hidden">
             <TrendChart data={data.spendingTrends} />
           </CardContent>
         </Card>
-        <Card className="col-span-3">
-          <CardHeader>
-            <CardTitle>Gastos por Categoría</CardTitle>
+        <Card className="col-span-3 premium-card flex flex-col">
+          <CardHeader className="pb-2 flex-shrink-0">
+            <CardTitle className="text-sm">Gastos por Categoría</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="flex-1 min-h-0 overflow-hidden">
             <SpendingChart data={data.categoryBreakdown} />
           </CardContent>
         </Card>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-        <Card className="col-span-4">
-          <CardHeader>
-            <CardTitle>Presupuestos</CardTitle>
+      <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-7 flex-shrink-0">
+        <Card className="col-span-4 premium-card">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm">Presupuestos</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="max-h-48 overflow-y-auto">
             <BudgetProgressList budgets={data.budgets} />
           </CardContent>
         </Card>
