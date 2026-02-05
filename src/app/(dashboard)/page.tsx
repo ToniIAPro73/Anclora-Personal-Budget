@@ -1,6 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { RevenueCard } from "@/components/dashboard/revenue-card";
 import { BalanceCard } from "@/components/features/dashboard/balance-card";
 import { IncomeExpenseCard } from "@/components/features/dashboard/income-expense-card";
 import { SpendingChart } from "@/components/features/dashboard/spending-chart";
@@ -27,8 +28,9 @@ export default function DashboardPage() {
         <p className="text-muted-foreground">Bienvenido de nuevo a tu gestor financiero.</p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <BalanceCard balance={data.totalBalance} />
+        <RevenueCard />
         <IncomeExpenseCard 
           income={data.monthlyIncome} 
           expenses={data.monthlyExpenses} 

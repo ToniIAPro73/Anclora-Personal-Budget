@@ -1,4 +1,4 @@
-import { addMonths, startOfMonth, endOfMonth, eachMonthOfInterval, format } from 'date-fns';
+import { addMonths, startOfMonth, endOfMonth, eachMonthOfInterval } from 'date-fns';
 import prisma from '@/lib/prisma';
 import { safeDecimal } from '@/lib/finance/calculation-rules';
 

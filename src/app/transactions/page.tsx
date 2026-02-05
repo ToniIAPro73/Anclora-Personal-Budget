@@ -3,7 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { TransactionList } from "@/components/features/transactions/transaction-list";
 import { Button } from "@/components/ui/button";
-import { Plus, Filter } from "lucide-react";
+import { Plus } from "lucide-react";
 import { useState } from "react";
 import { TransactionForm } from "@/components/features/transactions/transaction-form";
 
@@ -27,7 +27,7 @@ export default function TransactionsPage() {
         </div>
         <div className="flex gap-2">
           <Button variant="secondary" size="md">
-            <Filter className="h-4 w-4 mr-2" /> Filtrar
+            Filtrar
           </Button>
           <Button variant="primary" size="md">
             <Plus className="h-4 w-4 mr-2" /> Nueva Transacción

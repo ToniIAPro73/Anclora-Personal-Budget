@@ -1,4 +1,4 @@
-"use client";
+'use client'
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -17,18 +17,41 @@ import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { LanguageSelector } from "@/components/ui/language-selector";
 
 const navigation = [
-  { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { name: "Transacciones", href: "/transactions", icon: ReceiptText },
-  { name: "Cuentas", href: "/accounts", icon: Wallet },
-  { name: "Presupuestos", href: "/budgets", icon: PieChart },
-  { name: "Metas", href: "/goals", icon: Target },
-  { name: "Proyecciones", href: "/projections", icon: TrendingUp },
-  { name: "Asesor IA", href: "/advisor", icon: Sparkles },
-  { name: "Ajustes", href: "/settings", icon: Settings },
-];
+  {
+    name: 'Dashboard',
+    href: '/',
+    emoji: "📊"
+  },
+  {
+    name: 'Cuentas',
+    href: '/accounts',
+    emoji: "💰"
+  },
+  {
+    name: 'Presupuestos',
+    href: '/budgets',
+    emoji: "💳"
+  },
+  {
+    name: 'Transacciones',
+    href: '/transactions',
+    emoji: "💸"
+  },
+  {
+    name: 'Asesor IA',
+    href: '/advisor',
+    emoji: "🤖"
+  },
+  {
+    name: 'Proyecciones',
+    href: '/projections',
+    emoji: "📈"
+  },
+]
 
 export function Sidebar() {
-  const pathname = usePathname();
+  const pathname = usePathname()
+  const [collapsed, setCollapsed] = useState(false)
 
   return (
     <div className="flex h-full w-64 flex-col border-r bg-card/50 backdrop-blur-md shadow-sm">
@@ -38,7 +61,8 @@ export function Sidebar() {
       
       <nav className="flex-1 space-y-1 px-3 py-4">
         {navigation.map((item) => {
-          const isActive = pathname === item.href;
+          const isActive = pathname === item.href
+          
           return (
             <Link
               key={item.name}
@@ -59,7 +83,7 @@ export function Sidebar() {
               />
               {item.name}
             </Link>
-          );
+          )
         })}
       </nav>
 
@@ -73,12 +97,32 @@ export function Sidebar() {
           <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold">
             U
           </div>
-          <div className="overflow-hidden">
-            <p className="text-xs font-medium truncate">Usuario</p>
-            <p className="text-[10px] text-muted-foreground truncate">usuario@ejemplo.com</p>
-          </div>
-        </div>
+        )}
+
+        <Link
+          href="/settings"
+          className={cn(
+            'flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition-all duration-200',
+            pathname === '/settings'
+              ? 'bg-primary/10 text-primary border border-primary/20'
+              : 'text-muted-foreground hover:bg-secondary/50 hover:text-foreground'
+          )}
+          title={collapsed ? 'Configuración' : undefined}
+        >
+          <span className="text-xl mr-2">⚙️</span>
+          {!collapsed && <span>Configuración</span>}
+        </Link>
+
+        <Button
+          variant="ghost"
+          size="sm"
+          className="w-full justify-center mt-2 hover:bg-secondary/50 rounded-xl"
+          onClick={() => setCollapsed(!collapsed)}
+        >
+          {collapsed ? <span>▶</span> : <span>◀</span>}
+          {!collapsed && <span className="ml-2 text-xs">Colapsar</span>}
+        </Button>
       </div>
-    </div>
-  );
+    </aside>
+  )
 }

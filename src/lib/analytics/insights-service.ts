@@ -1,5 +1,5 @@
 import prisma from '@/lib/prisma';
-import { getSpendingTrends, getCategoryBreakdown } from './financial-analytics';
+// import { getSpendingTrends, getCategoryBreakdown } from './financial-analytics';
 import { addMonths, addDays } from 'date-fns';
 import { InsightType, InsightSeverity } from '@prisma/client';
 

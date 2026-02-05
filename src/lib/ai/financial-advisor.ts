@@ -2,7 +2,7 @@ import { ChatOpenAI, OpenAIEmbeddings } from '@langchain/openai';
 import { PromptTemplate } from '@langchain/core/prompts';
 import prisma from '@/lib/prisma';
 import { addMonths } from 'date-fns';
-import { safeDecimal } from '@/lib/finance/calculation-rules';
+// import { safeDecimal } from '@/lib/finance/calculation-rules';
 
 const FINANCIAL_ADVISOR_SYSTEM_PROMPT = `You are a personal financial advisor AI assistant.
 ... (as defined in SDD)
@@ -17,7 +17,7 @@ User Question: {question}`;
 export async function askFinancialAdvisor(
   userId: string,
   question: string,
-  conversationId?: string
+  _conversationId?: string
 ) {
   const financialContext = await getUserFinancialContext(userId);
   const relevantDocs = await searchFinancialDocuments(userId, question);
