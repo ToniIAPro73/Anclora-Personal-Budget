@@ -14,18 +14,19 @@ import { Button } from "@/components/ui/button";
 import { BudgetForm } from "./budget-form";
 
 interface BudgetFormDialogProps {
-  trigger?: React.ReactNode;
+  initialData?: any;
+  children?: React.ReactNode;
 }
 
-export function BudgetFormDialog({ trigger }: BudgetFormDialogProps) {
+export function BudgetFormDialog({ initialData, children }: BudgetFormDialogProps) {
   const [open, setOpen] = useState(false);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        {trigger || (
+        {children || (
           <Button className="bg-primary hover:bg-primary/90 rounded-lg">
-            <Plus className="h-4 w-4 mr-2" /> Nuevo Presupuesto
+            <Plus className="h-4 w-4 mr-2" /> {initialData ? "Editar" : "Nuevo Presupuesto"}
           </Button>
         )}
       </DialogTrigger>
@@ -33,14 +34,14 @@ export function BudgetFormDialog({ trigger }: BudgetFormDialogProps) {
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <span className="h-5 w-5 flex items-center justify-center text-primary">💳</span>
-            <span>Configurar Presupuesto</span>
+            <span>{initialData ? "Editar Presupuesto" : "Configurar Presupuesto"}</span>
           </DialogTitle>
           <DialogDescription>
-            Establece límites de gasto para controlar mejor tus finanzas.
+            {initialData ? "Actualiza los límites de tu presupuesto." : "Establece límites de gasto para controlar mejor tus finanzas."}
           </DialogDescription>
         </DialogHeader>
         <div className="py-4">
-          <BudgetForm onSuccess={() => setOpen(false)} />
+          <BudgetForm initialData={initialData} onSuccess={() => setOpen(false)} />
         </div>
       </DialogContent>
     </Dialog>

@@ -14,18 +14,19 @@ import { Button } from "@/components/ui/button";
 import { TransactionForm } from "./transaction-form";
 
 interface TransactionFormDialogProps {
-  trigger?: React.ReactNode;
+  initialData?: any;
+  children?: React.ReactNode;
 }
 
-export function TransactionFormDialog({ trigger }: TransactionFormDialogProps) {
+export function TransactionFormDialog({ initialData, children }: TransactionFormDialogProps) {
   const [open, setOpen] = useState(false);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        {trigger || (
+        {children || (
           <Button className="bg-primary hover:bg-primary/90 rounded-lg">
-            <Plus className="h-4 w-4 mr-2" /> Nueva Transacción
+            <Plus className="h-4 w-4 mr-2" /> {initialData ? "Editar" : "Nueva Transacción"}
           </Button>
         )}
       </DialogTrigger>
@@ -33,14 +34,14 @@ export function TransactionFormDialog({ trigger }: TransactionFormDialogProps) {
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <span className="h-5 w-5 flex items-center justify-center text-primary">💸</span>
-            <span>Registrar Transacción</span>
+            <span>{initialData ? "Editar Transacción" : "Registrar Transacción"}</span>
           </DialogTitle>
           <DialogDescription>
-            Añade un nuevo movimiento a tus finanzas de forma rápida.
+            {initialData ? "Actualiza los detalles de este movimiento." : "Añade un nuevo movimiento a tus finanzas de forma rápida."}
           </DialogDescription>
         </DialogHeader>
         <div className="py-4">
-          <TransactionForm onSuccess={() => setOpen(false)} />
+          <TransactionForm initialData={initialData} onSuccess={() => setOpen(false)} />
         </div>
       </DialogContent>
     </Dialog>

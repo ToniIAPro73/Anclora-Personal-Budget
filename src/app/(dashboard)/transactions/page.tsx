@@ -1,11 +1,16 @@
 "use client";
 
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { TransactionList } from "@/components/features/transactions/transaction-list";
 import { TransactionFormDialog } from "@/components/features/transactions/transaction-form-dialog";
+import { Loader2 } from "lucide-react";
 
 export default function TransactionsPage() {
+  const { data, isLoading } = useQuery({
+    queryKey: ["transactions"],
+    queryFn: () => fetch("/api/transactions").then(res => res.json()),
+  });
+
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
       {/* Header */}
@@ -17,20 +22,13 @@ export default function TransactionsPage() {
         <TransactionFormDialog />
       </div>
 
-      {/* Empty State */}
-      <Card className="premium-card">
-        <CardContent className="text-center py-12">
-          <div className="text-6xl mb-4">💸</div>
-          <p className="text-muted-foreground mb-4">No hay transacciones registradas aún.</p>
-          <TransactionFormDialog 
-            trigger={
-              <Button className="bg-primary hover:bg-primary/90 rounded-lg">
-                <Plus className="h-4 w-4 mr-2" /> Crear Primera Transacción
-              </Button>
-            } 
-          />
-        </CardContent>
-      </Card>
+      {isLoading ? (
+        <div className="flex justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </div>
+      ) : (
+        <TransactionList transactions={data?.transactions || []} />
+      )}
     </div>
   );
 }

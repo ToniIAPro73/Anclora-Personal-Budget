@@ -35,6 +35,10 @@ declare module "lucide-react" {
   export const Search: React.FC<any>;
   export const Menu: React.FC<any>;
   export const LogOut: React.FC<any>;
+  export const Pencil: React.FC<any>;
+  export const Trash2: React.FC<any>;
+  export const Edit: React.FC<any>;
+  export const Trash: React.FC<any>;
 }
 
 declare module "@langchain/openai" {

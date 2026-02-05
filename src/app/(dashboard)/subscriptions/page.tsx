@@ -1,26 +1,38 @@
 "use client";
 
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Plus, MoreHorizontal, Edit, Trash } from "lucide-react";
+import { formatCurrency, cn } from "@/lib/utils";
+import { SubscriptionFormDialog } from "@/components/features/subscriptions/subscription-form-dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { formatCurrency } from "@/lib/utils";
-import { cn } from "@/lib/utils";
-import { SubscriptionFormDialog } from "@/components/features/subscriptions/subscription-form-dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useToast } from "@/hooks/use-toast";
 
 interface Subscription {
   id: string;
   name: string;
+  description?: string;
   amount: number;
   currency: string;
   frequency: "MONTHLY" | "YEARLY" | "QUARTERLY" | "BIANNUAL";
   nextBillingDate: string;
-  category: string;
+  nextDate?: string;
+  category: { name: string } | string;
   status: "ACTIVE" | "PAUSED" | "CANCELLED";
+  isActive: boolean;
 }
 
 export default function SubscriptionsPage() {
   const [filter, setFilter] = useState<"ALL" | "ACTIVE" | "PAUSED" | "CANCELLED">("ACTIVE");
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   const { data: subscriptions = [], isLoading } = useQuery({
     queryKey: ["subscriptions", filter],
@@ -30,17 +42,30 @@ export default function SubscriptionsPage() {
     },
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await fetch(`/api/subscriptions/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Error al eliminar la suscripción");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["subscriptions"] });
+      toast({ title: "Suscripción eliminada", description: "La suscripción se ha eliminado correctamente." });
+    },
+  });
+
   const stats = {
     monthlyTotal: subscriptions
-      .filter((s: Subscription) => s.status === "ACTIVE")
-      .reduce((sum: number, s: Subscription) => {
-        if (s.frequency === "MONTHLY") return sum + s.amount;
-        if (s.frequency === "YEARLY") return sum + (s.amount / 12);
-        if (s.frequency === "QUARTERLY") return sum + (s.amount / 3);
-        if (s.frequency === "BIANNUAL") return sum + (s.amount / 6);
+      .filter((s: any) => s.isActive)
+      .reduce((sum: number, s: any) => {
+        const amount = Number(s.amount);
+        if (s.frequency === "MONTHLY") return sum + amount;
+        if (s.frequency === "YEARLY") return sum + (amount / 12);
+        if (s.frequency === "QUARTERLY") return sum + (amount / 3);
+        if (s.frequency === "BIANNUAL") return sum + (amount / 6);
         return sum;
       }, 0),
-    count: subscriptions.filter((s: Subscription) => s.status === "ACTIVE").length,
+    count: subscriptions.filter((s: any) => s.isActive).length,
   };
 
   const frequencyLabels: Record<string, string> = {
@@ -110,26 +135,28 @@ export default function SubscriptionsPage() {
           <Card className="premium-card">
             <CardContent className="text-center py-12">
               <p className="text-muted-foreground mb-4">No hay suscripciones en este estado.</p>
-              <Button className="bg-primary hover:bg-primary/90 rounded-lg">
-                <Plus className="h-4 w-4 mr-2" /> Crear Suscripción
-              </Button>
+              <SubscriptionFormDialog>
+                <Button className="bg-primary hover:bg-primary/90 rounded-lg">
+                  <Plus className="h-4 w-4 mr-2" /> Crear Suscripción
+                </Button>
+              </SubscriptionFormDialog>
             </CardContent>
           </Card>
         ) : (
-          subscriptions.map((subscription: Subscription) => (
+          subscriptions.map((subscription: any) => (
             <Card key={subscription.id} className="premium-card">
               <CardContent className="pt-6">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
-                      <h3 className="font-semibold text-sm">{subscription.name}</h3>
+                      <h3 className="font-semibold text-sm">{subscription.description || subscription.name}</h3>
                       <span className={cn(
                         "text-xs px-2 py-1 rounded-full font-medium",
-                        subscription.status === "ACTIVE" && "bg-emerald-500/20 text-emerald-700 dark:text-emerald-400",
-                        subscription.status === "PAUSED" && "bg-amber-500/20 text-amber-700 dark:text-amber-400",
+                        subscription.isActive && "bg-emerald-500/20 text-emerald-700 dark:text-emerald-400",
+                        !subscription.isActive && "bg-amber-500/20 text-amber-700 dark:text-amber-400",
                         subscription.status === "CANCELLED" && "bg-red-500/20 text-red-700 dark:text-red-400"
                       )}>
-                        {subscription.status === "ACTIVE" ? "Activa" : subscription.status === "PAUSED" ? "Pausada" : "Cancelada"}
+                        {subscription.isActive ? "Activa" : "Pausada"}
                       </span>
                     </div>
                     <div className="grid grid-cols-2 gap-4 text-xs text-muted-foreground">
@@ -138,23 +165,41 @@ export default function SubscriptionsPage() {
                         <span>{frequencyLabels[subscription.frequency]}</span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span>Próximo: {new Date(subscription.nextBillingDate).toLocaleDateString("es-ES")}</span>
+                        <span>Próximo: {new Date(subscription.nextDate || subscription.nextBillingDate).toLocaleDateString("es-ES")}</span>
                       </div>
                     </div>
                   </div>
 
                   <div className="text-right flex-shrink-0">
                     <div className="text-xl font-bold font-outfit">{formatCurrency(subscription.amount)}</div>
-                    <p className="text-xs text-muted-foreground">{subscription.category}</p>
+                    <p className="text-xs text-muted-foreground">{subscription.category?.name || "Gasto"}</p>
                   </div>
 
                   <div className="flex gap-2 flex-shrink-0">
-                    <Button variant="secondary" size="sm" className="rounded-lg h-8 w-8 p-0">
-                      <span className="text-sm">✏️</span>
-                    </Button>
-                    <Button variant="secondary" size="sm" className="rounded-lg h-8 w-8 p-0 text-red-500 hover:text-red-600">
-                      <span className="text-sm">🗑️</span>
-                    </Button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <SubscriptionFormDialog initialData={subscription}>
+                          <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                            <Edit className="h-4 w-4 mr-2" /> Editar
+                          </DropdownMenuItem>
+                        </SubscriptionFormDialog>
+                        <DropdownMenuItem 
+                          className="text-destructive"
+                          onSelect={() => {
+                            if (confirm("¿Estás seguro de que quieres eliminar esta suscripción?")) {
+                              deleteMutation.mutate(subscription.id);
+                            }
+                          }}
+                        >
+                          <Trash className="h-4 w-4 mr-2" /> Eliminar
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
                 </div>
               </CardContent>

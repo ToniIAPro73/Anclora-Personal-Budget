@@ -44,7 +44,13 @@ const ACCOUNT_COLORS = [
   "#ec4899", // pink
 ];
 
-export function AccountFormDialog({ children }: { children?: React.ReactNode }) {
+export function AccountFormDialog({ 
+  initialData, 
+  children 
+}: { 
+  initialData?: any;
+  children?: React.ReactNode 
+}) {
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -58,7 +64,13 @@ export function AccountFormDialog({ children }: { children?: React.ReactNode }) 
     reset,
   } = useForm<AccountFormData>({
     resolver: zodResolver(accountSchema) as any,
-    defaultValues: {
+    defaultValues: initialData ? {
+      name: initialData.name,
+      type: initialData.type,
+      currency: initialData.currency,
+      balance: Number(initialData.currentBalance),
+      color: initialData.color,
+    } : {
       name: "",
       type: "CHECKING",
       currency: "EUR",
@@ -67,36 +79,39 @@ export function AccountFormDialog({ children }: { children?: React.ReactNode }) 
     },
   });
 
-  const createAccountMutation = useMutation({
+  const mutation = useMutation({
     mutationFn: async (data: AccountFormData) => {
-      const response = await fetch("/api/accounts", {
-        method: "POST",
+      const url = initialData?.id ? `/api/accounts/${initialData.id}` : "/api/accounts";
+      const method = initialData?.id ? "PATCH" : "POST";
+      
+      const response = await fetch(url, {
+        method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
-      if (!response.ok) throw new Error("Error al crear la cuenta");
+      if (!response.ok) throw new Error("Error al procesar la cuenta");
       return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["accounts"] });
       toast({
-        title: "✅ Cuenta creada",
-        description: "La cuenta se ha creado exitosamente.",
+        title: initialData ? "✅ Cuenta actualizada" : "✅ Cuenta creada",
+        description: "Los cambios se han guardado exitosamente.",
       });
       setOpen(false);
-      reset();
+      if (!initialData) reset();
     },
     onError: () => {
       toast({
         title: "❌ Error",
-        description: "No se pudo crear la cuenta. Inténtalo de nuevo.",
+        description: "No se pudo guardar la cuenta. Inténtalo de nuevo.",
         variant: "destructive",
       });
     },
   });
 
   const onSubmit = (data: AccountFormData) => {
-    createAccountMutation.mutate(data);
+    mutation.mutate(data);
   };
 
   return (
@@ -104,7 +119,7 @@ export function AccountFormDialog({ children }: { children?: React.ReactNode }) 
       <DialogTrigger asChild>
         {children || (
           <Button className="bg-primary hover:bg-primary/90 rounded-lg">
-            <Plus className="h-4 w-4 mr-2" /> Nueva Cuenta
+            <Plus className="h-4 w-4 mr-2" /> {initialData ? "Editar" : "Nueva Cuenta"}
           </Button>
         )}
       </DialogTrigger>
@@ -112,10 +127,10 @@ export function AccountFormDialog({ children }: { children?: React.ReactNode }) 
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Wallet className="h-5 w-5 text-primary" />
-            Nueva Cuenta
+            {initialData ? "Editar Cuenta" : "Nueva Cuenta"}
           </DialogTitle>
           <DialogDescription>
-            Crea una nueva cuenta para gestionar tus finanzas.
+            {initialData ? "Actualiza los detalles de tu cuenta." : "Crea una nueva cuenta para gestionar tus finanzas."}
           </DialogDescription>
         </DialogHeader>
 
@@ -139,7 +154,7 @@ export function AccountFormDialog({ children }: { children?: React.ReactNode }) 
               <Label htmlFor="type">Tipo de Cuenta *</Label>
               <Select
                 onValueChange={(value: string) => setValue("type", value as any)}
-                defaultValue="CHECKING"
+                defaultValue={watch("type")}
               >
                 <SelectTrigger id="type">
                   <SelectValue placeholder="Selecciona un tipo" />
@@ -179,7 +194,7 @@ export function AccountFormDialog({ children }: { children?: React.ReactNode }) 
               <Label htmlFor="currency">Moneda</Label>
               <Select
                 onValueChange={(value) => setValue("currency", value as any)}
-                defaultValue="EUR"
+                defaultValue={watch("currency")}
               >
                 <SelectTrigger id="currency">
                   <SelectValue />
@@ -218,16 +233,16 @@ export function AccountFormDialog({ children }: { children?: React.ReactNode }) 
             type="button"
             variant="secondary"
             onClick={() => setOpen(false)}
-            disabled={createAccountMutation.isPending}
+            disabled={mutation.isPending}
           >
             Cancelar
           </Button>
           <Button
             type="submit"
             onClick={handleSubmit(onSubmit as any)}
-            disabled={createAccountMutation.isPending}
+            disabled={mutation.isPending}
           >
-            {createAccountMutation.isPending ? "Creando..." : "Crear Cuenta"}
+            {mutation.isPending ? "Guardando..." : initialData ? "Guardar Cambios" : "Crear Cuenta"}
           </Button>
         </DialogFooter>
       </DialogContent>

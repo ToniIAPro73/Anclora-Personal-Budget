@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Sparkles, Loader2, Plus } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { CategoryQuickAdd } from "../categories/category-quick-add";
+import { useToast } from "@/hooks/use-toast";
 
 const transactionSchema = z.object({
   description: z.string().min(1, "La descripción es requerida"),
@@ -23,13 +24,28 @@ const transactionSchema = z.object({
 
 type TransactionFormValues = z.infer<typeof transactionSchema>;
 
-export function TransactionForm({ onSuccess }: { onSuccess?: () => void }) {
+export function TransactionForm({ 
+  initialData,
+  onSuccess 
+}: { 
+  initialData?: any;
+  onSuccess?: () => void 
+}) {
   const queryClient = useQueryClient();
+  const { toast } = useToast();
   const [isCategorizing, setIsCategorizing] = useState(false);
 
-  const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm<TransactionFormValues>({
+  const { register, handleSubmit, setValue, watch, reset, formState: { errors } } = useForm<TransactionFormValues>({
     resolver: zodResolver(transactionSchema),
-    defaultValues: {
+    defaultValues: initialData ? {
+      description: initialData.description,
+      amount: Number(initialData.amount),
+      type: initialData.type,
+      date: new Date(initialData.date).toISOString().split("T")[0],
+      accountId: initialData.accountId,
+      categoryId: initialData.categoryId || "",
+      merchant: initialData.merchant || "",
+    } : {
       type: "EXPENSE",
       date: new Date().toISOString().split("T")[0],
     },
@@ -38,12 +54,40 @@ export function TransactionForm({ onSuccess }: { onSuccess?: () => void }) {
   const { data: accounts } = useQuery({ queryKey: ["accounts"], queryFn: () => fetch("/api/accounts").then(res => res.json()) });
   const { data: categories } = useQuery({ queryKey: ["categories"], queryFn: () => fetch("/api/categories").then(res => res.json()) });
 
-  const createMutation = useMutation({
-    mutationFn: (data: TransactionFormValues) => fetch("/api/transactions", { method: "POST", body: JSON.stringify(data) }).then(res => res.json()),
+  const mutation = useMutation({
+    mutationFn: async (data: TransactionFormValues) => {
+      const url = initialData?.id ? `/api/transactions/${initialData.id}` : "/api/transactions";
+      const method = initialData?.id ? "PATCH" : "POST";
+
+      const res = await fetch(url, { 
+        method, 
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data) 
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || "Error al procesar la transacción");
+      }
+      return res.json();
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["transactions"] });
+      queryClient.invalidateQueries({ queryKey: ["accounts"] });
+      queryClient.invalidateQueries({ queryKey: ["budgets"] });
+      toast({
+        title: initialData ? "Transacción actualizada" : "Transacción creada",
+        description: "Los cambios se han guardado correctamente."
+      });
       onSuccess?.();
+      if (!initialData) reset();
     },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
   });
 
   const description = watch("description");
@@ -55,9 +99,8 @@ export function TransactionForm({ onSuccess }: { onSuccess?: () => void }) {
     return cat.type === transactionType;
   });
 
-  // AI Categorization trigger
   const handleAutoCategorize = async () => {
-    if (!description || !amount) return;
+    if (!description || !amount || initialData) return; // Avoid auto-categorize if editing
     setIsCategorizing(true);
     try {
       const res = await fetch("/api/ai/categorize", {
@@ -80,31 +123,37 @@ export function TransactionForm({ onSuccess }: { onSuccess?: () => void }) {
     }
   };
 
-  const onSubmit = (data: TransactionFormValues) => createMutation.mutate(data);
+  const onSubmit = (data: TransactionFormValues) => mutation.mutate(data);
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <div className="grid grid-cols-2 gap-4">
-        <Input 
-          label="Descripción" 
-          {...register("description")} 
-          error={errors.description?.message}
-          onBlur={() => description && handleAutoCategorize()}
-        />
-        <Input 
-          label="Comercio (opcional)" 
-          {...register("merchant")} 
-        />
+        <div className="flex flex-col gap-1.5">
+          <label className="text-sm font-medium">Descripción</label>
+          <Input 
+            {...register("description")} 
+            onBlur={() => description && handleAutoCategorize()}
+          />
+          {errors.description && <p className="text-xs text-destructive">{errors.description.message}</p>}
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <label className="text-sm font-medium">Comercio (opcional)</label>
+          <Input 
+            {...register("merchant")} 
+          />
+        </div>
       </div>
 
       <div className="grid grid-cols-3 gap-4">
-        <Input 
-          label="Cantidad" 
-          type="number" 
-          step="0.01" 
-          {...register("amount", { valueAsNumber: true })} 
-          error={errors.amount?.message}
-        />
+        <div className="flex flex-col gap-1.5">
+          <label className="text-sm font-medium">Cantidad</label>
+          <Input 
+            type="number" 
+            step="0.01" 
+            {...register("amount", { valueAsNumber: true })} 
+          />
+          {errors.amount && <p className="text-xs text-destructive">{errors.amount.message}</p>}
+        </div>
         <div className="flex flex-col gap-1.5">
           <label className="text-sm font-medium">Tipo</label>
           <select 
@@ -116,12 +165,14 @@ export function TransactionForm({ onSuccess }: { onSuccess?: () => void }) {
             <option value="TRANSFER">Transferencia</option>
           </select>
         </div>
-        <Input 
-          label="Fecha" 
-          type="date" 
-          {...register("date")} 
-          error={errors.date?.message}
-        />
+        <div className="flex flex-col gap-1.5">
+          <label className="text-sm font-medium">Fecha</label>
+          <Input 
+            type="date" 
+            {...register("date")} 
+          />
+          {errors.date && <p className="text-xs text-destructive">{errors.date.message}</p>}
+        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
@@ -136,7 +187,7 @@ export function TransactionForm({ onSuccess }: { onSuccess?: () => void }) {
               <option key={acc.id} value={acc.id}>{acc.name} ({acc.currency})</option>
             ))}
           </select>
-          {errors.accountId && <p className="text-xs text-danger">{errors.accountId.message}</p>}
+          {errors.accountId && <p className="text-xs text-destructive">{errors.accountId.message}</p>}
         </div>
 
         <div className="flex flex-col gap-1.5">
@@ -154,7 +205,7 @@ export function TransactionForm({ onSuccess }: { onSuccess?: () => void }) {
                 <option key={cat.id} value={cat.id}>{cat.name}</option>
               ))}
             </select>
-            {transactionType !== "TRANSFER" && (
+            {transactionType !== "TRANSFER" && !initialData && (
               <CategoryQuickAdd 
                 type={transactionType as "INCOME" | "EXPENSE"} 
                 onSuccess={(id) => setValue("categoryId", id)}
@@ -168,9 +219,9 @@ export function TransactionForm({ onSuccess }: { onSuccess?: () => void }) {
         <Button 
           type="submit" 
           variant="primary" 
-          disabled={createMutation.isPending}
+          disabled={mutation.isPending}
         >
-          {createMutation.isPending ? "Guardando..." : "Crear Transacción"}
+          {mutation.isPending ? "Guardando..." : initialData ? "Guardar Cambios" : "Crear Transacción"}
         </Button>
       </div>
     </form>

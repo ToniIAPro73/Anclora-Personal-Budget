@@ -79,7 +79,6 @@ export class BudgetService {
         endDate: { gte: new Date() },
       },
       include: {
-        // @ts-expect-error - category field exists in schema but type lock prevents update in IDE
         category: true,
         allocations: {
           include: { category: true },
@@ -123,6 +122,43 @@ export class BudgetService {
     } else if (spent >= limit * 0.9) {
       await this.createThresholdAlert(userId, budget.name, `Has gastado el 90% de tu presupuesto para ${budget.name}.`, 'medium');
     }
+  }
+
+  async updateBudget(id: string, data: any): Promise<Budget> {
+    return await prisma.$transaction(async (tx: any) => {
+      const budget = await tx.budget.update({
+        where: { id },
+        data: {
+          name: data.name,
+          totalAmount: data.totalAmount,
+          alertThreshold: data.alertThreshold,
+          period: data.period,
+          startDate: data.startDate,
+          endDate: data.endDate,
+        },
+      });
+
+      if (data.allocations) {
+        // Simple strategy: delete and recreate allocations
+        await tx.budgetAllocation.deleteMany({ where: { budgetId: id } });
+        await tx.budgetAllocation.createMany({
+          data: data.allocations.map((alloc: any) => ({
+            budgetId: id,
+            categoryId: alloc.categoryId,
+            amount: alloc.amount,
+          })),
+        });
+      }
+
+      return budget;
+    });
+  }
+
+  async deleteBudget(id: string): Promise<void> {
+    await prisma.budget.update({
+      where: { id },
+      data: { isActive: false },
+    });
   }
 
   private async createThresholdAlert(userId: string, budgetName: string, message: string, priority: string) {

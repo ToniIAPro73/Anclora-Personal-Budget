@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
@@ -35,7 +35,13 @@ const FREQUENCIES = [
   { value: "YEARLY", label: "Anual" },
 ] as const;
 
-export function SubscriptionFormDialog({ children }: { children?: React.ReactNode }) {
+export function SubscriptionFormDialog({ 
+  initialData,
+  children 
+}: { 
+  initialData?: any;
+  children?: React.ReactNode 
+}) {
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -60,7 +66,15 @@ export function SubscriptionFormDialog({ children }: { children?: React.ReactNod
     reset,
   } = useForm<SubscriptionFormData>({
     resolver: zodResolver(subscriptionSchema) as any,
-    defaultValues: {
+    defaultValues: initialData ? {
+      name: initialData.description || initialData.name,
+      amount: Number(initialData.amount),
+      frequency: initialData.frequency,
+      status: initialData.isActive ? "ACTIVE" : "PAUSED",
+      nextBillingDate: new Date(initialData.nextDate || initialData.nextBillingDate),
+      accountId: initialData.accountId,
+      categoryId: initialData.categoryId,
+    } : {
       name: "",
       amount: 0,
       frequency: "MONTHLY",
@@ -69,28 +83,54 @@ export function SubscriptionFormDialog({ children }: { children?: React.ReactNod
     },
   });
 
-  const createSubscriptionMutation = useMutation({
+  // Sync initialData if it changes while dialog is open or when it opens
+  useEffect(() => {
+    if (open && initialData) {
+      reset({
+        name: initialData.description || initialData.name,
+        amount: Number(initialData.amount),
+        frequency: initialData.frequency,
+        status: initialData.isActive ? "ACTIVE" : "PAUSED",
+        nextBillingDate: new Date(initialData.nextDate || initialData.nextBillingDate),
+        accountId: initialData.accountId,
+        categoryId: initialData.categoryId,
+      });
+    } else if (open && !initialData) {
+      reset({
+        name: "",
+        amount: 0,
+        frequency: "MONTHLY",
+        status: "ACTIVE",
+        nextBillingDate: new Date(),
+      });
+    }
+  }, [open, initialData, reset]);
+
+  const mutation = useMutation({
     mutationFn: async (data: SubscriptionFormData) => {
-      const response = await fetch("/api/subscriptions", {
-        method: "POST",
+      const url = initialData?.id ? `/api/subscriptions/${initialData.id}` : "/api/subscriptions";
+      const method = initialData?.id ? "PATCH" : "POST";
+      
+      const response = await fetch(url, {
+        method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
       
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || "Error al crear la suscripción");
+        throw new Error(errorData.error || "Error al guardar la suscripción");
       }
       return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["subscriptions"] });
       toast({
-        title: "✅ Suscripción creada",
-        description: "La suscripción se ha guardado correctamente.",
+        title: initialData ? "✅ Suscripción actualizada" : "✅ Suscripción creada",
+        description: "Los cambios se han guardado correctamente.",
       });
       setOpen(false);
-      reset();
+      if (!initialData) reset();
     },
     onError: (error: any) => {
       toast({
@@ -102,7 +142,7 @@ export function SubscriptionFormDialog({ children }: { children?: React.ReactNod
   });
 
   const onSubmit = (data: SubscriptionFormData) => {
-    createSubscriptionMutation.mutate(data);
+    mutation.mutate(data);
   };
 
   return (
@@ -110,7 +150,7 @@ export function SubscriptionFormDialog({ children }: { children?: React.ReactNod
       <DialogTrigger asChild>
         {children || (
           <Button className="bg-primary hover:bg-primary/90 rounded-lg">
-            <Plus className="h-4 w-4 mr-2" /> Nueva Suscripción
+            <Plus className="h-4 w-4 mr-2" /> {initialData ? "Editar" : "Nueva Suscripción"}
           </Button>
         )}
       </DialogTrigger>
@@ -118,10 +158,10 @@ export function SubscriptionFormDialog({ children }: { children?: React.ReactNod
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <span className="h-5 w-5 flex items-center justify-center text-primary">🔄</span>
-            Nueva Suscripción
+            {initialData ? "Editar Suscripción" : "Nueva Suscripción"}
           </DialogTitle>
           <DialogDescription>
-            Añade un servicio recurrente para seguir mejor tus gastos de forma eficiente.
+            {initialData ? "Actualiza los detalles de tu suscripción." : "Añade un servicio recurrente para seguir mejor tus gastos de forma eficiente."}
           </DialogDescription>
         </DialogHeader>
 
@@ -169,7 +209,6 @@ export function SubscriptionFormDialog({ children }: { children?: React.ReactNod
                     {accounts?.map((acc: any) => (
                       <SelectItem key={acc.id} value={acc.id}>{acc.name}</SelectItem>
                     ))}
-                    {!accounts?.length && <p className="p-2 text-xs text-muted-foreground">No hay cuentas disponibles</p>}
                   </SelectContent>
                 </Select>
                 {errors.accountId && (
@@ -209,7 +248,7 @@ export function SubscriptionFormDialog({ children }: { children?: React.ReactNod
                   id="nextBillingDate"
                   type="date"
                   onChange={(e) => setValue("nextBillingDate", new Date(e.target.value))}
-                  defaultValue={new Date().toISOString().split('T')[0]}
+                  value={watch("nextBillingDate") ? new Date(watch("nextBillingDate")).toISOString().split('T')[0] : ""}
                   className="h-11"
                 />
                 {errors.nextBillingDate && (
@@ -246,7 +285,7 @@ export function SubscriptionFormDialog({ children }: { children?: React.ReactNod
             type="button"
             variant="secondary"
             onClick={() => setOpen(false)}
-            disabled={createSubscriptionMutation.isPending}
+            disabled={mutation.isPending}
             className="rounded-lg font-outfit"
           >
             Cancelar
@@ -254,15 +293,15 @@ export function SubscriptionFormDialog({ children }: { children?: React.ReactNod
           <Button
             type="submit"
             onClick={handleSubmit(onSubmit as any)}
-            disabled={createSubscriptionMutation.isPending}
+            disabled={mutation.isPending}
             variant="primary"
             className="rounded-lg font-outfit"
           >
-            {createSubscriptionMutation.isPending ? (
+            {mutation.isPending ? (
               <span className="flex items-center gap-2">
                 <Loader2 className="h-4 w-4 animate-spin" /> Guardando...
               </span>
-            ) : "Guardar Suscripción"}
+            ) : initialData ? "Guardar Cambios" : "Guardar Suscripción"}
           </Button>
         </DialogFooter>
       </DialogContent>

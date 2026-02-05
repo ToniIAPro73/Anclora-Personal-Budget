@@ -18,35 +18,52 @@ export class SubscriptionService {
   async createSubscription(data: z.infer<typeof createSubscriptionSchema>): Promise<any> {
     const validated = createSubscriptionSchema.parse(data);
     
-    // Map frequency (BIANNUAL is handled as MONTHLY with interval 6 if not in enum, 
-    // but we just added it to schema.prisma)
-    const frequencyMap: Record<string, string> = {
-      'MONTHLY': 'MONTHLY',
-      'QUARTERLY': 'QUARTERLY',
-      'BIANNUAL': 'BIANNUAL',
-      'YEARLY': 'YEARLY',
-    };
-
     return await (prisma as any).recurringTransaction.create({
       data: {
         userId: validated.userId,
-        name: validated.name, // Note: The schema has description, not name. Let's check schema again.
         description: validated.name,
         amount: validated.amount,
-        type: 'EXPENSE', // Subscriptions are typically expenses
-        frequency: frequencyMap[validated.frequency] as any,
+        type: 'EXPENSE',
+        frequency: validated.frequency as any,
         startDate: new Date(),
         nextDate: validated.nextBillingDate,
         accountId: validated.accountId,
         categoryId: validated.categoryId,
         isActive: validated.status === 'ACTIVE',
+        notes: validated.notes,
       }
+    });
+  }
+
+  async updateSubscription(id: string, data: any): Promise<any> {
+    return await (prisma as any).recurringTransaction.update({
+      where: { id },
+      data: {
+        description: data.name,
+        amount: data.amount ? Number(data.amount) : undefined,
+        frequency: data.frequency as any,
+        nextDate: data.nextBillingDate ? new Date(data.nextBillingDate) : undefined,
+        accountId: data.accountId,
+        categoryId: data.categoryId,
+        isActive: data.status === 'ACTIVE' ? true : data.status === 'PAUSED' ? false : undefined,
+        notes: data.notes,
+      }
+    });
+  }
+
+  async deleteSubscription(id: string): Promise<void> {
+    await (prisma as any).recurringTransaction.delete({
+      where: { id }
     });
   }
 
   async getSubscriptions(userId: string): Promise<any[]> {
     return await (prisma as any).recurringTransaction.findMany({
       where: { userId },
+      include: {
+        category: true,
+        account: true,
+      },
       orderBy: { nextDate: 'asc' }
     });
   }

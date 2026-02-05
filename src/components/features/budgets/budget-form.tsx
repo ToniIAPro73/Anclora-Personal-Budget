@@ -19,13 +19,24 @@ const budgetSchema = z.object({
 
 type BudgetValues = z.infer<typeof budgetSchema>;
 
-export function BudgetForm({ onSuccess }: { onSuccess?: () => void }) {
+export function BudgetForm({ 
+  initialData, 
+  onSuccess 
+}: { 
+  initialData?: any;
+  onSuccess?: () => void 
+}) {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
   const { register, handleSubmit, setValue, formState: { errors } } = useForm<BudgetValues>({
     resolver: zodResolver(budgetSchema),
-    defaultValues: {
+    defaultValues: initialData ? {
+      categoryId: initialData.allocations?.[0]?.categoryId || initialData.categoryId,
+      amount: initialData.allocations?.[0]?.amount || initialData.totalAmount,
+      period: initialData.period,
+      alertThreshold: initialData.alertThreshold,
+    } : {
       period: "MONTHLY",
     },
   });
@@ -37,35 +48,44 @@ export function BudgetForm({ onSuccess }: { onSuccess?: () => void }) {
 
   const mutation = useMutation({
     mutationFn: async (data: BudgetValues) => {
-      // Find category name for default budget name
       const category = categories?.find((c: any) => c.id === data.categoryId);
       
       const payload = {
-        ...data,
         name: category ? `Presupuesto ${category.name}` : "Nuevo Presupuesto",
         totalAmount: data.amount,
+        period: data.period,
+        alertThreshold: data.alertThreshold,
+        categoryId: data.categoryId,
+        startDate: initialData?.startDate ? new Date(initialData.startDate) : new Date(),
+        endDate: initialData?.endDate ? new Date(initialData.endDate) : new Date(Date.now() + 30 * 24 * 60 * 60 *1000),
         allocations: [{
           categoryId: data.categoryId,
           amount: data.amount,
         }]
       };
 
-      const response = await fetch("/api/budgets", { 
-        method: "POST", 
+      const url = initialData?.id ? `/api/budgets/${initialData.id}` : "/api/budgets";
+      const method = initialData?.id ? "PATCH" : "POST";
+
+      const response = await fetch(url, { 
+        method, 
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload) 
       });
       
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || "Error al crear el presupuesto");
+        throw new Error(errorData.error || "Error al procesar el presupuesto");
       }
       
       return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["budgets"] });
-      toast({ title: "Presupuesto creado", description: "El presupuesto se ha configurado correctamente." });
+      toast({ 
+        title: initialData ? "Presupuesto actualizado" : "Presupuesto creado", 
+        description: "Los cambios se han guardado correctamente." 
+      });
       onSuccess?.();
     },
     onError: (error: any) => {

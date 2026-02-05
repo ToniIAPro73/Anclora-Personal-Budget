@@ -193,4 +193,44 @@ export class TransactionService {
       }
     });
   }
+
+  async updateTransaction(
+    id: string,
+    data: any
+  ): Promise<any> {
+    return await prisma.$transaction(async (tx: any) => {
+      // Get old transaction
+      const old = await tx.transaction.findUnique({ where: { id } });
+      if (!old) throw new Error('Transaction not found');
+
+      // Update account balance if amount or account changed
+      if (data.amount !== undefined || data.type !== undefined || data.accountId !== undefined) {
+        // Reverse old balance change
+        const oldBalanceChange = old.type === 'INCOME' ? -Number(old.amount) : Number(old.amount);
+        await tx.account.update({
+          where: { id: old.accountId },
+          data: { currentBalance: { increment: oldBalanceChange } }
+        });
+
+        // Apply new balance change
+        const finalAmount = data.amount ?? Number(old.amount);
+        const finalType = data.type ?? old.type;
+        const finalAccountId = data.accountId ?? old.accountId;
+        const newBalanceChange = finalType === 'INCOME' ? finalAmount : -finalAmount;
+        await tx.account.update({
+          where: { id: finalAccountId },
+          data: { currentBalance: { increment: newBalanceChange } }
+        });
+      }
+
+      return await tx.transaction.update({
+        where: { id },
+        data: {
+          ...data,
+          date: data.date ? new Date(data.date) : undefined,
+          amount: data.amount ? Number(data.amount) : undefined,
+        },
+      });
+    });
+  }
 }

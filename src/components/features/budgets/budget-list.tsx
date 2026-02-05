@@ -1,10 +1,19 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { cn, formatCurrency } from "@/lib/utils";
-import { Loader2 } from "lucide-react";
+import { Loader2, MoreHorizontal, Edit, Trash } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { BudgetFormDialog } from "./budget-form-dialog";
+import { useToast } from "@/hooks/use-toast";
 
 interface Budget {
   id: string;
@@ -29,9 +38,23 @@ interface Budget {
 }
 
 export function BudgetList() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
   const { data: budgets, isLoading, error } = useQuery<Budget[]>({
     queryKey: ["budgets"],
     queryFn: () => fetch("/api/budgets").then(res => res.json()),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await fetch(`/api/budgets/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Error al eliminar el presupuesto");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["budgets"] });
+      toast({ title: "Presupuesto eliminado", description: "El presupuesto se ha desactivado correctamente." });
+    },
   });
 
   if (isLoading) {
@@ -64,7 +87,6 @@ export function BudgetList() {
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
       {budgets.map((budget) => {
-        // Find the main category info (from allocations or top-level)
         const mainAllocation = budget.allocations?.[0];
         const categoryInfo = mainAllocation?.category || budget.category;
         
@@ -75,7 +97,7 @@ export function BudgetList() {
         const isNearLimit = budget.alertThreshold && (limit - spent) <= budget.alertThreshold;
 
         return (
-          <Card key={budget.id} className="premium-card overflow-hidden">
+          <Card key={budget.id} className="premium-card overflow-hidden relative group">
             <CardContent className="p-5">
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-3">
@@ -101,9 +123,33 @@ export function BudgetList() {
                     </p>
                   </div>
                 </div>
-                <div className="text-right">
-                  <div className="text-sm font-bold">{formatCurrency(limit)}</div>
-                  <p className="text-[10px] text-muted-foreground">Límite</p>
+
+                <div className="flex flex-col items-end">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-8 w-8">
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <BudgetFormDialog initialData={budget}>
+                        <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                          <Edit className="h-4 w-4 mr-2" /> Editar
+                        </DropdownMenuItem>
+                      </BudgetFormDialog>
+                      <DropdownMenuItem 
+                        className="text-destructive"
+                        onSelect={() => {
+                          if (confirm("¿Estás seguro de que quieres eliminar este presupuesto?")) {
+                            deleteMutation.mutate(budget.id);
+                          }
+                        }}
+                      >
+                        <Trash className="h-4 w-4 mr-2" /> Eliminar
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                  <div className="text-sm font-bold mt-1 text-right">{formatCurrency(limit)}</div>
                 </div>
               </div>
 
