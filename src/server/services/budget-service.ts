@@ -1,18 +1,18 @@
 import prisma from '@/lib/prisma';
 import { z } from 'zod';
-// Fallback types for missing Prisma members
-type Budget = any;
-type BudgetType = any;
-const BudgetType = {} as any;
+import { Budget, BudgetType, BudgetPeriod } from '@prisma/client';
 import { validateBudgetPeriod } from '@/lib/finance/calculation-rules';
 
 export const createBudgetSchema = z.object({
   userId: z.string(),
   name: z.string().min(1),
-  type: z.nativeEnum(BudgetType),
+  type: z.nativeEnum(BudgetType).default(BudgetType.CUSTOM),
+  period: z.nativeEnum(BudgetPeriod).default(BudgetPeriod.MONTHLY),
   startDate: z.date(),
   endDate: z.date(),
   totalAmount: z.number().positive(),
+  alertThreshold: z.number().optional(),
+  categoryId: z.string().optional(),
   rollover: z.boolean().default(false),
   allocations: z.array(z.object({
     categoryId: z.string(),
@@ -40,9 +40,12 @@ export class BudgetService {
           userId: validated.userId,
           name: validated.name,
           type: validated.type,
+          period: validated.period,
           startDate: validated.startDate,
           endDate: validated.endDate,
           totalAmount: validated.totalAmount,
+          alertThreshold: validated.alertThreshold,
+          categoryId: validated.categoryId,
           rollover: validated.rollover,
         },
       });
@@ -79,5 +82,66 @@ export class BudgetService {
         },
       },
     });
+  }
+
+  /**
+   * Check budget thresholds and generate alerts if needed
+   */
+  async checkThresholds(userId: string, categoryId: string, date: Date): Promise<void> {
+    const budget = await prisma.budget.findFirst({
+      where: {
+        userId,
+        isActive: true,
+        startDate: { lte: date },
+        endDate: { gte: date },
+      },
+      include: {
+        allocations: {
+          where: { categoryId },
+        },
+      },
+    });
+
+    if (!budget || budget.allocations.length === 0) return;
+
+    const allocation = budget.allocations[0];
+    const spent = Number(allocation.spent);
+    const limit = Number(allocation.amount);
+    const threshold = budget.alertThreshold ? Number(budget.alertThreshold) : null;
+
+    const remaining = limit - spent;
+    
+    // Alert logic
+    if (spent >= limit) {
+      await this.createThresholdAlert(userId, budget.name, `Has superado tu presupuesto para ${budget.name}. Gastado: ${spent}€ / Límite: ${limit}€`, 'critical');
+    } else if (threshold !== null && remaining <= threshold) {
+      await this.createThresholdAlert(userId, budget.name, `Te queda poco presupuesto para ${budget.name}. Restante: ${remaining.toFixed(2)}€`, 'high');
+    } else if (spent >= limit * 0.9) {
+      await this.createThresholdAlert(userId, budget.name, `Has gastado el 90% de tu presupuesto para ${budget.name}.`, 'medium');
+    }
+  }
+
+  private async createThresholdAlert(userId: string, budgetName: string, message: string, priority: string) {
+    // Check if similar unread alert already exists to avoid spam
+    const existing = await prisma.alert.findFirst({
+      where: {
+        userId,
+        title: `Alerta: ${budgetName}`,
+        isRead: false,
+        createdAt: { gte: new Date(Date.now() - 24 * 60 * 60 * 1000) } // Last 24h
+      }
+    });
+
+    if (!existing) {
+      await prisma.alert.create({
+        data: {
+          userId,
+          title: `Alerta: ${budgetName}`,
+          message,
+          type: 'BUDGET_THRESHOLD',
+          priority,
+        }
+      });
+    }
   }
 }

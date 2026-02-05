@@ -7,12 +7,13 @@ import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Sparkles, Loader2 } from "lucide-react";
+import { Sparkles, Loader2, Plus } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { CategoryQuickAdd } from "../categories/category-quick-add";
 
 const transactionSchema = z.object({
   description: z.string().min(1, "La descripción es requerida"),
-  amount: z.number().positive("Monto debe ser mayor a 0"),
+  amount: z.number().positive("La cantidad debe ser mayor a 0"),
   type: z.enum(["INCOME", "EXPENSE", "TRANSFER"]),
   date: z.string(),
   accountId: z.string().min(1, "Selecciona una cuenta"),
@@ -47,6 +48,12 @@ export function TransactionForm({ onSuccess }: { onSuccess?: () => void }) {
 
   const description = watch("description");
   const amount = watch("amount");
+  const transactionType = watch("type");
+
+  const filteredCategories = categories?.filter((cat: any) => {
+    if (transactionType === "TRANSFER") return false;
+    return cat.type === transactionType;
+  });
 
   // AI Categorization trigger
   const handleAutoCategorize = async () => {
@@ -92,7 +99,7 @@ export function TransactionForm({ onSuccess }: { onSuccess?: () => void }) {
 
       <div className="grid grid-cols-3 gap-4">
         <Input 
-          label="Monto" 
+          label="Cantidad" 
           type="number" 
           step="0.01" 
           {...register("amount", { valueAsNumber: true })} 
@@ -134,15 +141,23 @@ export function TransactionForm({ onSuccess }: { onSuccess?: () => void }) {
 
         <div className="flex flex-col gap-1.5">
           <label className="text-sm font-medium flex items-center justify-between">
-            Categoría
-            {isCategorizing && <Loader2 className="h-3 w-3 animate-spin" />}
+            <div className="flex items-center gap-2">
+              Categoría
+              {isCategorizing && <Loader2 className="h-3 w-3 animate-spin" />}
+            </div>
+            {transactionType !== "TRANSFER" && (
+              <CategoryQuickAdd 
+                type={transactionType as "INCOME" | "EXPENSE"} 
+                onSuccess={(id) => setValue("categoryId", id)}
+              />
+            )}
           </label>
           <select 
             {...register("categoryId")}
             className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
           >
             <option value="">Sin categoría</option>
-            {categories?.map((cat: any) => (
+            {filteredCategories?.map((cat: any) => (
               <option key={cat.id} value={cat.id}>{cat.name}</option>
             ))}
           </select>

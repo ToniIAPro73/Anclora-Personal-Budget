@@ -1,8 +1,9 @@
 import prisma from '@/lib/prisma';
 import { validateTransactionAmount } from '@/lib/finance/calculation-rules';
 import { z } from 'zod';
-// Fallback types for missing Prisma members
-type Transaction = any;
+import { BudgetService } from './budget-service';
+
+const budgetService = new BudgetService();
 
 export const createTransactionSchema = z.object({
   userId: z.string(),
@@ -26,7 +27,7 @@ export class TransactionService {
    */
   async createTransaction(
     data: z.infer<typeof createTransactionSchema>
-  ): Promise<Transaction> {
+  ): Promise<any> {
     // Validate input
     const validated = createTransactionSchema.parse(data);
     
@@ -40,17 +41,10 @@ export class TransactionService {
     const result = await prisma.$transaction(async (tx: any) => {
       // Create the transaction record
       const transaction = await tx.transaction.create({
-        data: {
-          ...validated,
-          // If no category provided, we'll need AI categorization later
-          // For now we just save what we have
-        },
+        data: validated,
       });
       
       // Update account balance
-      // INCOME increases balance, EXPENSE decreases it
-      // TRANSFER: For now handled similarly, but usually affects two accounts.
-      // SDD says TRANSACTIONS affect at least one account.
       const balanceChange = validated.type === 'INCOME'
         ? validated.amount
         : -validated.amount;
@@ -77,6 +71,12 @@ export class TransactionService {
       
       return transaction;
     });
+
+    // Check thresholds after transaction is committed (optional: could be inside transaction but might be slow)
+    if (validated.type === 'EXPENSE' && validated.categoryId) {
+      // We don't await this to keep transaction fast, or we could await if we want consistency
+      budgetService.checkThresholds(validated.userId, validated.categoryId, validated.date).catch(console.error);
+    }
     
     return result;
   }
@@ -98,6 +98,10 @@ export class TransactionService {
         isActive: true,
         startDate: { lte: date },
         endDate: { gte: date },
+        OR: [
+          { categoryId },
+          { allocations: { some: { categoryId } } }
+        ]
       },
       include: {
         allocations: {
@@ -106,7 +110,9 @@ export class TransactionService {
       },
     });
     
-    if (budget && budget.allocations.length > 0) {
+    if (!budget) return;
+
+    if (budget.allocations.length > 0) {
       await tx.budgetAllocation.update({
         where: { id: budget.allocations[0].id },
         data: {
