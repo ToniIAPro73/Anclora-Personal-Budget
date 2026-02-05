@@ -24,7 +24,7 @@ type LoginValues = z.infer<typeof loginSchema>;
 export function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
+  const callbackUrl = searchParams.get("callbackUrl") || "/";
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
 
@@ -76,7 +76,7 @@ export function LoginForm() {
         <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20 mb-4">
           <Wallet className="h-6 w-6 text-primary" />
         </div>
-        <CardTitle className="text-2xl font-bold font-outfit text-center">Acceder a Anclora</CardTitle>
+        <CardTitle className="text-2xl font-bold font-outfit text-center">Acceder a Anclora Personal Budget</CardTitle>
         <CardDescription className="text-center">
           Introduce tus datos para gestionar tus finanzas
         </CardDescription>

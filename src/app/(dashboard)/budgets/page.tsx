@@ -3,6 +3,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
+import { BudgetFormDialog } from "@/components/features/budgets/budget-form-dialog";
 
 export default function BudgetsPage() {
   return (
@@ -13,9 +14,7 @@ export default function BudgetsPage() {
           <h2 className="text-2xl font-bold font-outfit tracking-tight">Presupuestos</h2>
           <p className="text-sm text-muted-foreground">Controla tus límites de gasto por categoría.</p>
         </div>
-        <Button className="bg-primary hover:bg-primary/90 rounded-lg">
-          <Plus className="h-4 w-4 mr-2" /> Nuevo Presupuesto
-        </Button>
+        <BudgetFormDialog />
       </div>
 
       {/* Empty State */}
@@ -23,9 +22,13 @@ export default function BudgetsPage() {
         <CardContent className="text-center py-12">
           <div className="text-6xl mb-4">💳</div>
           <p className="text-muted-foreground mb-4">No hay presupuestos creados aún.</p>
-          <Button className="bg-primary hover:bg-primary/90 rounded-lg">
-            <Plus className="h-4 w-4 mr-2" /> Crear Primer Presupuesto
-          </Button>
+          <BudgetFormDialog 
+            trigger={
+              <Button className="bg-primary hover:bg-primary/90 rounded-lg">
+                <Plus className="h-4 w-4 mr-2" /> Crear Primer Presupuesto
+              </Button>
+            } 
+          />
         </CardContent>
       </Card>
     </div>

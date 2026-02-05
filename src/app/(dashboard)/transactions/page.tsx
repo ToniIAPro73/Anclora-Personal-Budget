@@ -1,8 +1,9 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
+import { TransactionFormDialog } from "@/components/features/transactions/transaction-form-dialog";
 
 export default function TransactionsPage() {
   return (
@@ -13,9 +14,7 @@ export default function TransactionsPage() {
           <h2 className="text-2xl font-bold font-outfit tracking-tight">Transacciones</h2>
           <p className="text-sm text-muted-foreground">Gestiona tus ingresos y gastos.</p>
         </div>
-        <Button className="bg-primary hover:bg-primary/90 rounded-lg">
-          <Plus className="h-4 w-4 mr-2" /> Nueva Transacción
-        </Button>
+        <TransactionFormDialog />
       </div>
 
       {/* Empty State */}
@@ -23,9 +22,13 @@ export default function TransactionsPage() {
         <CardContent className="text-center py-12">
           <div className="text-6xl mb-4">💸</div>
           <p className="text-muted-foreground mb-4">No hay transacciones registradas aún.</p>
-          <Button className="bg-primary hover:bg-primary/90 rounded-lg">
-            <Plus className="h-4 w-4 mr-2" /> Crear Primera Transacción
-          </Button>
+          <TransactionFormDialog 
+            trigger={
+              <Button className="bg-primary hover:bg-primary/90 rounded-lg">
+                <Plus className="h-4 w-4 mr-2" /> Crear Primera Transacción
+              </Button>
+            } 
+          />
         </CardContent>
       </Card>
     </div>

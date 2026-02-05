@@ -25,7 +25,7 @@ export default function DashboardLayout({
            {/* Background gradient hint */}
            <div className="absolute top-0 left-0 w-full h-96 bg-accent/5 -z-10 rounded-b-[3rem] backdrop-blur-3xl" />
            
-           <div className="mx-auto max-w-[1600px] h-full">
+           <div className="mx-auto max-w-[1600px] w-full">
               {children}
            </div>
         </main>

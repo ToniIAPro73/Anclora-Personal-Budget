@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { Sidebar } from './sidebar' // Re-using sidebar for mobile menu if needed
+import { signOut } from "next-auth/react"
 
 export function Navbar() {
   return (
@@ -65,7 +66,12 @@ export function Navbar() {
             <DropdownMenuContent align="end">
                 <DropdownMenuItem>Perfil</DropdownMenuItem>
                 <DropdownMenuItem>Configuración</DropdownMenuItem>
-                <DropdownMenuItem className="text-destructive">Cerrar Sesión</DropdownMenuItem>
+                <DropdownMenuItem 
+                  className="text-destructive cursor-pointer" 
+                  onClick={() => signOut({ callbackUrl: '/login' })}
+                >
+                  Cerrar Sesión
+                </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
