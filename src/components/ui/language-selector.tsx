@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { Globe, Check, ChevronDown } from 'lucide-react'
+// import { Globe, Check, ChevronDown } from 'lucide-react'
 import { useLocale } from '@/components/providers/locale-provider'
 import { locales, localeNames, type Locale } from '@/lib/i18n/translations'
 import { cn } from '@/lib/utils'
@@ -35,12 +35,12 @@ export function LanguageSelector() {
         )}
         aria-label="Seleccionar idioma"
       >
-        <Globe className="h-4 w-4 text-primary" />
+        <span className="text-primary">🌐</span>
         <span className="uppercase">{locale}</span>
-        <ChevronDown className={cn(
-          'h-3 w-3 transition-transform duration-200',
+        <span className={cn(
+          'text-xs transition-transform duration-200',
           isOpen && 'rotate-180'
-        )} />
+        )}>▼</span>
       </button>
 
       {isOpen && (
@@ -63,7 +63,7 @@ export function LanguageSelector() {
               )}
             >
               <span>{localeNames[loc]}</span>
-              {locale === loc && <Check className="h-4 w-4 text-accent" />}
+              {locale === loc && <span className="text-accent">✓</span>}
             </button>
           ))}
         </div>

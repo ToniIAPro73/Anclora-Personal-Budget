@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { 
   LayoutDashboard, 
@@ -13,6 +14,7 @@ import {
   Sparkles, 
   Settings 
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { LanguageSelector } from "@/components/ui/language-selector";
 
@@ -20,31 +22,37 @@ const navigation = [
   {
     name: 'Dashboard',
     href: '/',
+    icon: LayoutDashboard,
     emoji: "📊"
   },
   {
     name: 'Cuentas',
     href: '/accounts',
+    icon: Wallet,
     emoji: "💰"
   },
   {
     name: 'Presupuestos',
     href: '/budgets',
+    icon: PieChart,
     emoji: "💳"
   },
   {
     name: 'Transacciones',
     href: '/transactions',
+    icon: ReceiptText,
     emoji: "💸"
   },
   {
     name: 'Asesor IA',
     href: '/advisor',
+    icon: Sparkles,
     emoji: "🤖"
   },
   {
     name: 'Proyecciones',
     href: '/projections',
+    icon: TrendingUp,
     emoji: "📈"
   },
 ]
@@ -97,7 +105,11 @@ export function Sidebar() {
           <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold">
             U
           </div>
-        )}
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium truncate">Usuario</p>
+            <p className="text-xs text-muted-foreground truncate">usuario@anclora.com</p>
+          </div>
+        </div>
 
         <Link
           href="/settings"
@@ -107,10 +119,9 @@ export function Sidebar() {
               ? 'bg-primary/10 text-primary border border-primary/20'
               : 'text-muted-foreground hover:bg-secondary/50 hover:text-foreground'
           )}
-          title={collapsed ? 'Configuración' : undefined}
         >
-          <span className="text-xl mr-2">⚙️</span>
-          {!collapsed && <span>Configuración</span>}
+          <Settings className="h-5 w-5 flex-shrink-0" />
+          <span>Configuración</span>
         </Link>
 
         <Button
@@ -123,6 +134,6 @@ export function Sidebar() {
           {!collapsed && <span className="ml-2 text-xs">Colapsar</span>}
         </Button>
       </div>
-    </aside>
+    </div>
   )
 }
