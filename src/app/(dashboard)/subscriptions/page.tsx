@@ -55,17 +55,19 @@ export default function SubscriptionsPage() {
   });
 
   const stats = {
-    monthlyTotal: subscriptions
-      .filter((s: any) => s.isActive)
-      .reduce((sum: number, s: any) => {
-        const amount = Number(s.amount);
-        if (s.frequency === "MONTHLY") return sum + amount;
-        if (s.frequency === "YEARLY") return sum + (amount / 12);
-        if (s.frequency === "QUARTERLY") return sum + (amount / 3);
-        if (s.frequency === "BIANNUAL") return sum + (amount / 6);
-        return sum;
-      }, 0),
-    count: subscriptions.filter((s: any) => s.isActive).length,
+    monthlyTotal: Array.isArray(subscriptions) 
+      ? subscriptions
+        .filter((s: any) => s.isActive)
+        .reduce((sum: number, s: any) => {
+          const amount = Number(s.amount);
+          if (s.frequency === "MONTHLY") return sum + amount;
+          if (s.frequency === "YEARLY") return sum + (amount / 12);
+          if (s.frequency === "QUARTERLY") return sum + (amount / 3);
+          if (s.frequency === "BIANNUAL") return sum + (amount / 6);
+          return sum;
+        }, 0)
+      : 0,
+    count: Array.isArray(subscriptions) ? subscriptions.filter((s: any) => s.isActive).length : 0,
   };
 
   const frequencyLabels: Record<string, string> = {

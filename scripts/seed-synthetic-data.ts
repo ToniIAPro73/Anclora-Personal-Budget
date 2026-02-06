@@ -18,9 +18,9 @@ const prisma = new PrismaClient();
  * - Period: 01/01/2024 to 05/02/2026
  */
 
-const USER_ID = 'synthetic-user-001'; // Replace with actual user ID
-const START_DATE = new Date('2024-01-01');
-const END_DATE = new Date('2026-02-05');
+const USER_ID = 'cml8zvemo0000n800h38pab55';
+const START_DATE = new Date('2023-01-01');
+const END_DATE = new Date();
 
 // AI Subscriptions
 const AI_SUBSCRIPTIONS = [
@@ -44,21 +44,31 @@ const MISC_RANGE = [10, 30]; // €10-30/week (misc small expenses)
 async function main() {
   console.log('🚀 Starting synthetic dataset generation...\n');
 
+  // 0. Clean up existing data for this user
+  console.log('🧹 Cleaning up existing data for user...');
+  await prisma.transaction.deleteMany({ where: { userId: USER_ID } });
+  await prisma.budgetAllocation.deleteMany({ where: { budget: { userId: USER_ID } } });
+  await prisma.budget.deleteMany({ where: { userId: USER_ID } });
+  await prisma.recurringTransaction.deleteMany({ where: { userId: USER_ID } });
+  await prisma.account.deleteMany({ where: { userId: USER_ID } });
+  await prisma.category.deleteMany({ where: { userId: USER_ID } });
+  console.log('✅ Cleanup complete.\n');
+
   // 1. Create or get user
-  console.log('👤 Creating user...');
+  console.log('👤 Creating/Getting user...');
   const user = await prisma.user.upsert({
     where: { id: USER_ID },
     update: {},
     create: {
       id: USER_ID,
-      email: 'usuario@anclora.com',
-      name: 'Usuario',
+      email: 'pmi140979@gmail.com',
+      name: 'Toni',
       defaultCurrency: 'EUR',
       locale: 'es-ES',
       timezone: 'Europe/Madrid',
     },
   });
-  console.log(`✅ User created: ${user.email}\n`);
+  console.log(`✅ User available: ${user.email}\n`);
 
   // 2. Create account
   console.log('🏦 Creating bank account...');
@@ -179,7 +189,31 @@ async function main() {
   ]);
   console.log(`✅ Created ${categories.length} categories\n`);
 
-  // 4. Generate transactions
+  // 4. Create recurring transactions
+  console.log('🔄 Creating recurring transactions...');
+  const recurringTransactions = await Promise.all(
+    AI_SUBSCRIPTIONS.map((sub, index) => 
+      prisma.recurringTransaction.create({
+        data: {
+          id: `recurring-sub-${sub.name.toLowerCase().replace(/\s+/g, '-')}`,
+          userId: user.id,
+          accountId: account.id,
+          categoryId: 'cat-expense-subscriptions',
+          amount: sub.amount,
+          type: 'EXPENSE',
+          description: `Suscripción ${sub.name}`,
+          frequency: 'MONTHLY',
+          startDate: START_DATE,
+          nextDate: new Date(new Date().getFullYear(), new Date().getMonth(), sub.day),
+          isActive: true,
+          dayOfMonth: sub.day,
+        }
+      })
+    )
+  );
+  console.log(`✅ Created ${recurringTransactions.length} recurring transactions\n`);
+
+  // 5. Generate transactions
   console.log('💸 Generating transactions...');
   const transactions: Prisma.TransactionCreateManyInput[] = [];
   let currentDate = new Date(START_DATE);

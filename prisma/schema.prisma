@@ -38,6 +38,7 @@ model User {
   financialDocuments FinancialDocument[]
   goals              FinancialGoal[]
   alerts             Alert[]
+  recurringTransactions RecurringTransaction[]
   
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -73,6 +74,7 @@ model Account {
   // Relations
   user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   transactions Transaction[]
+  recurringTransactions RecurringTransaction[]
   
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -118,6 +120,7 @@ model Category {
   transactions Transaction[]
   budgetAllocations BudgetAllocation[]
   budgets           Budget[]
+  recurringTransactions RecurringTransaction[]
   
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -225,7 +228,10 @@ model RecurringTransaction {
   // Status
   isActive    Boolean   @default(true)
   
-  // Generated transactions
+  // Relations
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  account  Account   @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  category Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   transactions Transaction[]
   
   createdAt DateTime @default(now())
