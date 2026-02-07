@@ -22,26 +22,27 @@ export default function DashboardPage() {
   if (isLoading) return <DashboardSkeleton />;
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
-      <div>
-        <h2 className="text-3xl font-bold font-outfit tracking-tight">Dashboard</h2>
-        <p className="text-muted-foreground">Bienvenido de nuevo a tu gestor financiero.</p>
+    <div className="h-[calc(100vh-8rem)] flex flex-col gap-3 overflow-hidden">
+      {/* Header - minimal height */}
+      <div className="flex-shrink-0">
+        <h2 className="text-xl font-bold font-outfit tracking-tight">Dashboard</h2>
+        <p className="text-xs text-muted-foreground">Bienvenido de nuevo a tu gestor financiero.</p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      {/* Stats Cards - Responsive auto-fit grid, compact height */}
+      <div className="grid gap-2 grid-cols-[repeat(auto-fit,minmax(180px,1fr))] flex-shrink-0">
         <BalanceCard balance={data.totalBalance} />
         <RevenueCard />
         <IncomeExpenseCard 
           income={data.monthlyIncome} 
           expenses={data.monthlyExpenses} 
         />
-        {/* Placeholder for Goals or Next Payment */}
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Tasa de Ahorro</CardTitle>
+        <Card className="premium-card">
+          <CardHeader className="pb-1 pt-3">
+            <CardTitle className="text-xs font-medium">Tasa de Ahorro</CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold font-outfit">
+          <CardContent className="pb-3">
+            <div className="text-lg lg:text-xl font-bold font-outfit">
               {data.monthlyIncome > 0 
                 ? (((data.monthlyIncome - data.monthlyExpenses) / data.monthlyIncome) * 100).toFixed(1) 
                 : "0"}%
@@ -50,35 +51,35 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-        <Card className="col-span-4">
-          <CardHeader>
-            <CardTitle>Tendencia de Gastos</CardTitle>
+      {/* Charts - Reduced height to fit better */}
+      <div className="grid gap-2 grid-cols-1 lg:grid-cols-2 h-[28vh] flex-shrink-0">
+        <Card className="premium-card h-full flex flex-col overflow-hidden">
+          <CardHeader className="pb-1 pt-3 flex-shrink-0">
+            <CardTitle className="text-sm">Tendencia de Gastos</CardTitle>
           </CardHeader>
-          <CardContent className="pl-2">
+          <CardContent className="pl-2 flex-1 min-h-[180px] flex items-center justify-center overflow-hidden">
             <TrendChart data={data.spendingTrends} />
           </CardContent>
         </Card>
-        <Card className="col-span-3">
-          <CardHeader>
-            <CardTitle>Gastos por Categoría</CardTitle>
+        <Card className="premium-card h-full flex flex-col overflow-hidden">
+          <CardHeader className="pb-1 pt-3 flex-shrink-0">
+            <CardTitle className="text-sm">Gastos por Categoría</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="flex-1 min-h-[200px] flex items-center justify-center overflow-hidden">
             <SpendingChart data={data.categoryBreakdown} />
           </CardContent>
         </Card>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-        <Card className="col-span-4">
-          <CardHeader>
-            <CardTitle>Presupuestos</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <BudgetProgressList budgets={data.budgets} />
-          </CardContent>
-        </Card>
-      </div>
+      {/* Budgets - Remaining space, no scroll */}
+      <Card className="premium-card flex-1 flex flex-col overflow-hidden min-h-0">
+        <CardHeader className="pb-1 pt-3 flex-shrink-0">
+          <CardTitle className="text-sm">Presupuestos</CardTitle>
+        </CardHeader>
+        <CardContent className="flex-1 overflow-y-auto min-h-0">
+          <BudgetProgressList budgets={data.budgets} />
+        </CardContent>
+      </Card>
     </div>
   );
 }

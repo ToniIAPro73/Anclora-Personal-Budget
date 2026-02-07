@@ -1,16 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { getAuthenticatedUser } from "@/lib/auth-helper";
 import prisma from "@/lib/prisma";
 import { startOfMonth, endOfMonth, addMonths } from "date-fns";
 import { getSpendingTrends, getCategoryBreakdown } from "@/lib/analytics/financial-analytics";
 
 export async function GET(req: NextRequest) {
-  const session = await auth();
-  if (!session?.user?.id) {
+  const user = await getAuthenticatedUser();
+  if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const userId = session.user.id;
+  const userId = user.id;
   const now = new Date();
   const start = startOfMonth(now);
   const end = endOfMonth(now);

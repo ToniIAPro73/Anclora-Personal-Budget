@@ -1,0 +1,33 @@
+Fetching subscriptions for: cml8zvemo0000n800h38pab55
+Error in service: PrismaClientValidationError: 
+Invalid `any).recurringTransaction.findMany()` invocation in
+C:\Users\Usuario\Workspace\01_Proyectos\Anclora_Personal_Budget\src\server\services\subscription-service.ts:61:55
+
+  58 }
+  59 
+  60 async getSubscriptions(userId: string): Promise<any[]> {
+ÔåÆ 61   return await (prisma as any).recurringTransaction.findMany({
+         where: {
+           userId: "cml8zvemo0000n800h38pab55"
+         },
+         include: {
+           category: true,
+           ~~~~~~~~
+           account: true,
+       ?   transactions?: true
+         },
+         orderBy: {
+           nextDate: "asc"
+         }
+       })
+
+Unknown field `category` for include statement on model `RecurringTransaction`. Available options are marked with ?.
+    at wn (C:\Users\Usuario\Workspace\01_Proyectos\Anclora_Personal_Budget\node_modules\@prisma\client\runtime\library.js:29:1363)
+    at $n.handleRequestError (C:\Users\Usuario\Workspace\01_Proyectos\Anclora_Personal_Budget\node_modules\@prisma\client\runtime\library.js:121:6958)
+    at $n.handleAndLogRequestError (C:\Users\Usuario\Workspace\01_Proyectos\Anclora_Personal_Budget\node_modules\@prisma\client\runtime\library.js:121:6623)
+    at $n.request (C:\Users\Usuario\Workspace\01_Proyectos\Anclora_Personal_Budget\node_modules\@prisma\client\runtime\library.js:121:6307)
+    at async l (C:\Users\Usuario\Workspace\01_Proyectos\Anclora_Personal_Budget\node_modules\@prisma\client\runtime\library.js:130:9633)
+    at async SubscriptionService.getSubscriptions (C:\Users\Usuario\Workspace\01_Proyectos\Anclora_Personal_Budget\src\server\services\subscription-service.ts:61:12)
+    at async main (C:\Users\Usuario\Workspace\01_Proyectos\Anclora_Personal_Budget\test-subs.ts:7:18) {
+  clientVersion: '5.22.0'
+}

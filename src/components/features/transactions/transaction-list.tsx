@@ -1,21 +1,51 @@
+"use client";
+
 import { formatCurrency, formatDate, cn } from "@/lib/utils";
 import { 
   ArrowUpCircle, 
   ArrowDownCircle, 
   MoreHorizontal,
-  ReceiptText
+  ReceiptText,
+  Edit,
+  Trash
 } from "lucide-react";
 import { 
   Card, 
   CardContent
 } from "@/components/ui/card";
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
+import { TransactionFormDialog } from "./transaction-form-dialog";
 
 interface TransactionListProps {
   transactions: any[];
 }
 
 export function TransactionList({ transactions }: TransactionListProps) {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await fetch(`/api/transactions/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Error al eliminar la transacción");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["transactions"] });
+      queryClient.invalidateQueries({ queryKey: ["accounts"] });
+      queryClient.invalidateQueries({ queryKey: ["budgets"] });
+      toast({ title: "Transacción eliminada", description: "El movimiento se ha eliminado correctamente." });
+    },
+  });
+
   if (!transactions.length) {
     return (
       <Card>
@@ -54,9 +84,31 @@ export function TransactionList({ transactions }: TransactionListProps) {
                 )}>
                   {tx.type === "INCOME" ? "+" : "-"}{formatCurrency(tx.amount)}
                 </div>
-                <Button variant="ghost" size="icon" className="h-8 w-8">
-                  <MoreHorizontal className="h-4 w-4" />
-                </Button>
+                
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-8 w-8">
+                      <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <TransactionFormDialog initialData={tx}>
+                      <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                        <Edit className="h-4 w-4 mr-2" /> Editar
+                      </DropdownMenuItem>
+                    </TransactionFormDialog>
+                    <DropdownMenuItem 
+                      className="text-destructive"
+                      onSelect={() => {
+                        if (confirm("¿Estás seguro de que quieres eliminar esta transacción?")) {
+                          deleteMutation.mutate(tx.id);
+                        }
+                      }}
+                    >
+                      <Trash className="h-4 w-4 mr-2" /> Eliminar
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             </div>
           </CardContent>

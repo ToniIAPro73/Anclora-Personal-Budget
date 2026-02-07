@@ -29,6 +29,16 @@ declare module "lucide-react" {
   export const Banknote: React.FC<any>;
   export const Landmark: React.FC<any>;
   export const AlertCircle: React.FC<any>;
+  export const Eye: React.FC<any>;
+  export const EyeOff: React.FC<any>;
+  export const Bell: React.FC<any>;
+  export const Search: React.FC<any>;
+  export const Menu: React.FC<any>;
+  export const LogOut: React.FC<any>;
+  export const Pencil: React.FC<any>;
+  export const Trash2: React.FC<any>;
+  export const Edit: React.FC<any>;
+  export const Trash: React.FC<any>;
 }
 
 declare module "@langchain/openai" {

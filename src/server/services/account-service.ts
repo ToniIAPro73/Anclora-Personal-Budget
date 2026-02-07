@@ -46,10 +46,17 @@ export class AccountService {
   /**
    * Update account details
    */
-  async updateAccount(id: string, data: Partial<z.infer<typeof createAccountSchema>>): Promise<Account> {
+  async updateAccount(id: string, data: Partial<z.infer<typeof createAccountSchema>> & { balance?: number }): Promise<Account> {
+    const { balance, ...rest } = data;
+    const updateData: any = { ...rest };
+    
+    if (balance !== undefined) {
+      updateData.currentBalance = balance;
+    }
+
     return await prisma.account.update({
       where: { id },
-      data,
+      data: updateData,
     });
   }
 

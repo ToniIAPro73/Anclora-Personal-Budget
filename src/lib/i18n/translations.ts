@@ -55,7 +55,7 @@ export const translations = {
       button: 'Comenzar ahora',
     },
     footer: {
-      copyright: '© 2026 Anclora Nexus Group. Todos los derechos reservados.',
+      copyright: '© 2026 Anclora Personal Budget. Todos los derechos reservados.',
       privacy: 'Privacidad',
       terms: 'Términos',
       contact: 'Contacto',
@@ -107,7 +107,7 @@ export const translations = {
       button: 'Get started',
     },
     footer: {
-      copyright: '© 2026 Anclora Nexus Group. All rights reserved.',
+      copyright: '© 2026 Anclora Personal Budget. All rights reserved.',
       privacy: 'Privacy',
       terms: 'Terms',
       contact: 'Contact',
@@ -159,7 +159,7 @@ export const translations = {
       button: 'Commencer',
     },
     footer: {
-      copyright: '© 2026 Anclora Nexus Group. Tous droits réservés.',
+      copyright: '© 2026 Anclora Personal Budget. Tous droits réservés.',
       privacy: 'Confidentialité',
       terms: 'Conditions',
       contact: 'Contact',
@@ -211,7 +211,7 @@ export const translations = {
       button: 'Jetzt starten',
     },
     footer: {
-      copyright: '© 2026 Anclora Nexus Group. Alle Rechte vorbehalten.',
+      copyright: '© 2026 Anclora Personal Budget. Alle Rechte vorbehalten.',
       privacy: 'Datenschutz',
       terms: 'AGB',
       contact: 'Kontakt',

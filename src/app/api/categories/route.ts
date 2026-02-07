@@ -1,23 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { getAuthenticatedUser } from "@/lib/auth-helper";
 import { CategoryService } from "@/server/services/category-service";
 import prisma from "@/lib/prisma";
 
 const categoryService = new CategoryService();
 
 export async function GET(req: NextRequest) {
-  const session = await auth();
-  if (!session?.user?.id) {
+  const user = await getAuthenticatedUser();
+  if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const categories = await categoryService.getCategories(session.user.id);
+  const categories = await categoryService.getCategories(user.id);
   return NextResponse.json(categories);
 }
 
 export async function POST(req: NextRequest) {
-  const session = await auth();
-  if (!session?.user?.id) {
+  const user = await getAuthenticatedUser();
+  if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const category = await categoryService.createCategory({
       ...body,
-      userId: session.user.id,
+      userId: user.id,
     });
 
     return NextResponse.json(category, { status: 201 });

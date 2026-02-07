@@ -1,23 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { getAuthenticatedUser } from "@/lib/auth-helper";
 import { AccountService } from "@/server/services/account-service";
 import prisma from "@/lib/prisma";
 
 const accountService = new AccountService();
 
 export async function GET(req: NextRequest) {
-  const session = await auth();
-  if (!session?.user?.id) {
+  const user = await getAuthenticatedUser();
+  if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const accounts = await accountService.getAccounts(session.user.id);
+  const accounts = await accountService.getAccounts(user.id);
   return NextResponse.json(accounts);
 }
 
 export async function POST(req: NextRequest) {
-  const session = await auth();
-  if (!session?.user?.id) {
+  const user = await getAuthenticatedUser();
+  if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const account = await accountService.createAccount({
       ...body,
-      userId: session.user.id,
+      userId: user.id,
     });
 
     return NextResponse.json(account, { status: 201 });

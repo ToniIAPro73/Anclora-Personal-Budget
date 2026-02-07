@@ -1,58 +1,41 @@
 'use client'
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useState } from "react";
-import { cn } from "@/lib/utils";
-import { 
-  LayoutDashboard, 
-  ReceiptText, 
-  Wallet, 
-  PieChart, 
-  Target, 
-  TrendingUp, 
-  Sparkles, 
-  Settings 
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { ThemeToggle } from "@/components/ui/theme-toggle";
-import { LanguageSelector } from "@/components/ui/language-selector";
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
+import { cn } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
+import { useState } from 'react'
+import { ThemeToggle } from "@/components/ui/theme-toggle"
 
 const navigation = [
   {
     name: 'Dashboard',
     href: '/',
-    icon: LayoutDashboard,
     emoji: "📊"
   },
   {
     name: 'Cuentas',
     href: '/accounts',
-    icon: Wallet,
     emoji: "💰"
   },
   {
     name: 'Presupuestos',
     href: '/budgets',
-    icon: PieChart,
     emoji: "💳"
   },
   {
     name: 'Transacciones',
     href: '/transactions',
-    icon: ReceiptText,
     emoji: "💸"
   },
   {
-    name: 'Asesor IA',
-    href: '/advisor',
-    icon: Sparkles,
-    emoji: "🤖"
+    name: 'Suscripciones',
+    href: '/subscriptions',
+    emoji: "🔄"
   },
   {
     name: 'Proyecciones',
     href: '/projections',
-    icon: TrendingUp,
     emoji: "📈"
   },
 ]
@@ -62,12 +45,20 @@ export function Sidebar() {
   const [collapsed, setCollapsed] = useState(false)
 
   return (
-    <div className="flex h-full w-64 flex-col border-r bg-card/50 backdrop-blur-md shadow-sm">
-      <div className="flex h-16 items-center px-6">
-        <h1 className="text-xl font-bold font-outfit text-primary gradient-text">Anclora Budget</h1>
+    <aside
+      className={cn(
+        'relative flex flex-col border-r border-border/50 bg-card/50 backdrop-blur-md transition-all duration-300 z-50 h-full',
+        collapsed ? 'w-16' : 'w-64',
+        'hidden md:flex'
+      )}
+    >
+      <div className="flex items-center justify-between p-4 h-16 border-b border-border/50">
+        {!collapsed && (
+            <span className="font-bold text-lg text-primary tracking-tight gradient-text">Anclora Personal Budget</span>
+        )}
       </div>
-      
-      <nav className="flex-1 space-y-1 px-3 py-4">
+
+      <nav className="flex-1 space-y-1 p-4 overflow-y-auto">
         {navigation.map((item) => {
           const isActive = pathname === item.href
           
@@ -76,40 +67,32 @@ export function Sidebar() {
               key={item.name}
               href={item.href}
               className={cn(
-                "group flex items-center rounded-xl px-3 py-2 text-sm font-medium transition-all duration-200",
-                isActive 
-                  ? "bg-primary text-primary-foreground shadow-md glow-primary" 
-                  : "text-muted-foreground hover:bg-secondary/50 hover:text-foreground"
+                'flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition-all duration-200 group',
+                collapsed ? 'justify-center' : '',
+                isActive
+                  ? 'bg-primary text-primary-foreground shadow-md glow-primary'
+                  : 'text-muted-foreground hover:bg-secondary/50 hover:text-foreground'
               )}
+              title={collapsed ? item.name : undefined}
             >
-              <item.icon
-                className={cn(
-                  "mr-3 h-5 w-5 flex-shrink-0 transition-colors",
-                  isActive ? "text-primary-foreground" : "text-muted-foreground group-hover:text-foreground"
-                )}
-                aria-hidden="true"
-              />
-              {item.name}
+              <span className={cn(
+                "text-xl transition-transform group-hover:scale-110",
+                isActive && "scale-110"
+              )}>
+                {item.emoji}
+              </span>
+              {!collapsed && <span>{item.name}</span>}
             </Link>
           )
         })}
       </nav>
 
-      <div className="p-4 space-y-4 border-t border-border/50">
-        <div className="flex items-center justify-between gap-2">
-          <ThemeToggle />
-          <LanguageSelector />
-        </div>
-        
-        <div className="flex items-center gap-3 p-2 rounded-xl bg-secondary/30 border border-border/50">
-          <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-bold">
-            U
+      <div className="p-4 border-t border-border/50 space-y-4">
+        {!collapsed && (
+          <div className="flex items-center justify-center animate-fade-in">
+            <ThemeToggle />
           </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium truncate">Usuario</p>
-            <p className="text-xs text-muted-foreground truncate">usuario@anclora.com</p>
-          </div>
-        </div>
+        )}
 
         <Link
           href="/settings"
@@ -119,21 +102,32 @@ export function Sidebar() {
               ? 'bg-primary/10 text-primary border border-primary/20'
               : 'text-muted-foreground hover:bg-secondary/50 hover:text-foreground'
           )}
+          title={collapsed ? 'Configuración' : undefined}
         >
-          <Settings className="h-5 w-5 flex-shrink-0" />
-          <span>Configuración</span>
+          <span className="text-xl mr-2">⚙️</span>
+          {!collapsed && <span>Configuración</span>}
         </Link>
-
-        <Button
-          variant="ghost"
-          size="sm"
-          className="w-full justify-center mt-2 hover:bg-secondary/50 rounded-xl"
-          onClick={() => setCollapsed(!collapsed)}
-        >
-          {collapsed ? <span>▶</span> : <span>◀</span>}
-          {!collapsed && <span className="ml-2 text-xs">Colapsar</span>}
-        </Button>
       </div>
-    </div>
+
+      {/* Floating toggle button - ALWAYS visible */}
+      <button
+        onClick={() => setCollapsed(!collapsed)}
+        className={cn(
+          "absolute -right-3 top-20 z-50",
+          "h-6 w-6 rounded-full",
+          "bg-primary text-primary-foreground",
+          "shadow-lg hover:shadow-xl",
+          "hover:scale-110 active:scale-95",
+          "transition-all duration-200",
+          "flex items-center justify-center",
+          "border-2 border-background"
+        )}
+        aria-label={collapsed ? "Expandir sidebar" : "Colapsar sidebar"}
+      >
+        <span className="text-xs font-bold">
+          {collapsed ? '›' : '‹'}
+        </span>
+      </button>
+    </aside>
   )
 }

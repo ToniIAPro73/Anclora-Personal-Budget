@@ -37,6 +37,8 @@ model User {
   aiConversations    AIConversation[]
   financialDocuments FinancialDocument[]
   goals              FinancialGoal[]
+  alerts             Alert[]
+  recurringTransactions RecurringTransaction[]
   
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -72,6 +74,7 @@ model Account {
   // Relations
   user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   transactions Transaction[]
+  recurringTransactions RecurringTransaction[]
   
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -116,6 +119,8 @@ model Category {
   subcategories Category[]   @relation("CategoryHierarchy")
   transactions Transaction[]
   budgetAllocations BudgetAllocation[]
+  budgets           Budget[]
+  recurringTransactions RecurringTransaction[]
   
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -190,6 +195,12 @@ enum TransactionType {
   TRANSFER  // Transferencia entre cuentas
 }
 
+enum BudgetPeriod {
+  MONTHLY
+  QUARTERLY
+  YEARLY
+}
+
 // ===== RECURRING TRANSACTIONS =====
 
 model RecurringTransaction {
@@ -217,7 +228,10 @@ model RecurringTransaction {
   // Status
   isActive    Boolean   @default(true)
   
-  // Generated transactions
+  // Relations
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  account  Account   @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  category Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   transactions Transaction[]
   
   createdAt DateTime @default(now())
@@ -235,6 +249,7 @@ enum RecurrenceFrequency {
   MONTHLY
   BIMONTHLY
   QUARTERLY
+  BIANNUAL
   YEARLY
 }
 
@@ -255,11 +270,15 @@ model Budget {
   
   // Settings
   rollover    Boolean      @default(false) // Carry over unused budget
+  alertThreshold Decimal?  @db.Decimal(15, 2)
+  period      BudgetPeriod @default(MONTHLY)
   isActive    Boolean      @default(true)
   
   // Relations
   user        User                @relation(fields: [userId], references: [id], onDelete: Cascade)
-  allocations BudgetAllocation[]
+  categoryId      String?
+  category        Category?           @relation(fields: [categoryId], references: [id])
+  allocations     BudgetAllocation[]
   
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -530,4 +549,21 @@ enum InsightSeverity {
   INFO
   WARNING
   CRITICAL
+}
+
+// ===== ALERTS & NOTIFICATIONS =====
+
+model Alert {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String
+  message   String
+  type      String   // e.g., "BUDGET_THRESHOLD", "ACCOUNT_LOW"
+  priority  String   @default("medium") // low, medium, high, critical
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@map("alerts")
 }
